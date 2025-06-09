@@ -1,0 +1,9 @@
+<!-- maxx logo SVG -->
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="60" rx="12" fill="#222" />
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="bold"
+        fill="#00FFD0" letter-spacing="5">
+    maxx
+  </text>
+</svg>
