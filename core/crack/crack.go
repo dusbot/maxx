@@ -84,7 +84,6 @@ const (
 	CRACK_APACHE        = "APACHE"
 	CRACK_GRAFANA       = "GRAFANA"
 	CRACK_MINIO         = "MINIO"
-	CRACK_ENVOY         = "ENVOY"
 )
 
 type CrackTemplate func() Crack
@@ -178,35 +177,17 @@ var (
 		CRACK_ELASTICSEARCH: func() Crack {
 			return &ElasticsearchCracker{}
 		},
-		CRACK_WEBLOGIC: func() Crack {
-			return &HttpCracker{}
-		},
-		CRACK_EXPRESS: func() Crack {
-			return &HttpCracker{}
-		},
-		CRACK_HABASE_REST: func() Crack {
-			return &HttpCracker{}
-		},
 		CRACK_FLASK: func() Crack {
 			return &HttpCracker{}
 		},
 		CRACK_GIN: func() Crack {
 			return &HttpCracker{}
 		},
-		CRACK_PROMETHEUS: func() Crack {
-			return &HttpCracker{}
-		},
 		CRACK_APACHE: func() Crack {
 			return &HttpCracker{}
 		},
-		CRACK_GRAFANA: func() Crack {
-			return &HttpCracker{}
-		},
 		CRACK_MINIO: func() Crack {
-			return &HttpCracker{}
-		},
-		CRACK_ENVOY: func() Crack {
-			return &HttpCracker{}
+			return &MinioCracker{}
 		},
 	}
 	DefaultPortService = map[int]string{

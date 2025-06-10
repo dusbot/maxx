@@ -23,6 +23,9 @@ func (h *HttpCracker) Ping() (succ bool, err error) {
 	client := resty.New().SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).SetTimeout(time.Second * time.Duration(timeout)).SetLogger(&NoLogger{})
 	defer client.Close()
 	if !strings.HasPrefix(h.Target, "http") {
+		if strings.Contains(h.Target, "://") {
+			h.Target = strings.Split(h.Target, "://")[1]
+		}
 		h.Target = fmt.Sprintf("http://%s", h.Target)
 	}
 	_, err = client.R().Get(h.Target)
@@ -32,17 +35,20 @@ func (h *HttpCracker) Ping() (succ bool, err error) {
 	return false, errors.ErrUnsupported
 }
 
-func (f *HttpCracker) Crack() (succ bool, err error) {
+func (h *HttpCracker) Crack() (succ bool, err error) {
 	var timeout = 3
-	if f.Timeout > 0 {
-		timeout = f.Timeout
+	if h.Timeout > 0 {
+		timeout = h.Timeout
 	}
 	client := resty.New().SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).SetTimeout(time.Second * time.Duration(timeout)).SetLogger(&NoLogger{})
 	defer client.Close()
-	if !strings.HasPrefix(f.Target, "http") {
-		f.Target = fmt.Sprintf("http://%s", f.Target)
+	if !strings.HasPrefix(h.Target, "http") {
+		if strings.Contains(h.Target, "://") {
+			h.Target = strings.Split(h.Target, "://")[1]
+		}
+		h.Target = fmt.Sprintf("http://%s", h.Target)
 	}
-	resp, err := client.R().SetBasicAuth(f.User, f.Pass).Get(f.Target)
+	resp, err := client.R().SetBasicAuth(h.User, h.Pass).Get(h.Target)
 	if err == nil {
 		defer resp.Body.Close()
 		if resp.StatusCode() == http.StatusOK {
