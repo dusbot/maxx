@@ -91,7 +91,7 @@ var Crack = &cli.Command{
 		} else {
 			slog.SetLevel(slog.INFO)
 		}
-		return run.Run(runCtx, &types.Task{
+		return run.Crack(runCtx, &types.Task{
 			Verbose:   Verbose,
 			MaxTime:   MaxTime,
 			Timeout:   Timeout,

@@ -24,7 +24,7 @@ import (
 
 var consoleLock sync.Mutex
 
-func Run(ctx context.Context, task *types.Task) (err error) {
+func Crack(ctx context.Context, task *types.Task) (err error) {
 	start := time.Now()
 	defer func() {
 		slog.Printf(slog.INFO, "Total cost: [%s]", time.Since(start).String())
@@ -148,6 +148,9 @@ func Run(ctx context.Context, task *types.Task) (err error) {
 								crackService.SetTarget(target)
 								crackService.SetAuth(user, pass)
 								crackService.SetTimeout(task.Timeout)
+								if task.Verbose {
+									slog.Printf(slog.DEBUG, "Crack target[%s] with user[%s] pass[%s]", target, user, pass)
+								}
 								if succ, err := crackService.Crack(); err == nil && succ {
 									if task.Verbose {
 										slog.Printf(slog.DATA, "Discovered auth Service[%s] target[%s] with user[%s] pass[%s]", service, target, user, pass)
