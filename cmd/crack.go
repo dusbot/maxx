@@ -13,8 +13,11 @@ import (
 	"github.com/dusbot/maxx/libs/slog"
 	"github.com/dusbot/maxx/libs/utils"
 	"github.com/dusbot/maxx/run"
+	"github.com/fatih/color"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/urfave/cli/v2"
 )
 
@@ -183,14 +186,7 @@ var Crack = &cli.Command{
 
 func parseArgs(ctx *cli.Context) {
 	if ctx.Bool("list-service") {
-		slog.Println(slog.DATA, "Supported services:")
-		table := tablewriter.NewWriter(os.Stdout)
-		table.Footer(fmt.Sprintf("Total: %d", len(crack.CrackServiceMap)))
-		for service := range crack.CrackServiceMap {
-			table.Append([]string{service})
-		}
-		table.Render()
-		table.Close()
+		listService()
 		os.Exit(0)
 	}
 	CN = ctx.Bool("cn")
@@ -226,6 +222,63 @@ func parseArgs(ctx *cli.Context) {
 			Passwords = append(Passwords, passData...)
 		}
 	}
+}
+
+func listService() {
+	colorCfg := renderer.ColorizedConfig{
+		Header: renderer.Tint{
+			FG: renderer.Colors{color.FgHiWhite, color.Bold},
+			BG: renderer.Colors{color.BgBlue},
+		},
+		Column: renderer.Tint{
+			FG: renderer.Colors{color.FgCyan},
+			Columns: []renderer.Tint{
+				{FG: renderer.Colors{color.FgMagenta}},
+				{},
+				{FG: renderer.Colors{color.FgHiRed}},
+			},
+		},
+		Footer: renderer.Tint{
+			FG: renderer.Colors{color.FgYellow, color.Bold},
+			Columns: []renderer.Tint{
+				{},
+				{FG: renderer.Colors{color.FgHiYellow}},
+				{},
+			},
+		},
+		Border:    renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+		Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+	}
+	table := tablewriter.NewTable(os.Stdout, tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal, MergeMode: tw.MergeHorizontal},
+				Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
+				ColMaxWidths: tw.CellWidth{Global: 25},
+			},
+			Footer: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignRight},
+			},
+		}))
+	table.Header([]string{"Services", "Available", "for", "Credential", "Cracking"})
+	services := make([]string, 0, len(crack.CrackServiceMap))
+	for service := range crack.CrackServiceMap {
+		services = append(services, service)
+	}
+	for i := 0; i < len(services); i += 7 {
+		end := i + 7
+		if end > len(services) {
+			end = len(services)
+		}
+		row := services[i:end]
+		for len(row) < 7 {
+			row = append(row, "")
+		}
+		table.Append(row)
+	}
+	table.Footer("", "", "", "", "", "Total", fmt.Sprintf("%d", len(crack.CrackServiceMap)))
+	table.Render()
+	table.Close()
 }
 
 func ReadDict(dict string) (dictData []string, err error) {
