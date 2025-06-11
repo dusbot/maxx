@@ -1,0 +1,45 @@
+[
+    {
+        "name": "case_simple_echo",
+        "methods": [
+            "GET",
+            "POST"
+        ],
+        "payload": "echo MAXX_STR",
+        "type": "pattern"
+    },
+    {
+        "name": "case_simple_echo_error",
+        "methods": [
+            "GET",
+            "POST"
+        ],
+        "payload": "MAXX_RAND_CMD",
+        "type": "error",
+        "rules": [
+            "syntax error",
+            "No such file or directory",
+            "command not found",
+            "not found, did you mean",
+            "not recognized as an internal or external command",
+            "CommandNotFoundException"
+        ]
+    },
+    {
+        "name": "case_no_echo_sleep",
+        "methods": [
+            "GET",
+            "POST"
+        ],
+        "payload": "sleep MAXX_NUM",
+        "type": "sleep"
+    },
+    {
+        "name": "case_no_echo_curl",
+        "methods": [
+            "GET",
+            "POST"
+        ],
+        "type": "url"
+    }
+]
