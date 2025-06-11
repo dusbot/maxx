@@ -9,17 +9,23 @@ var ERR_CONNECTION = errors.New("connection failed")
 type Crack interface {
 	Ping() (bool, error)
 	Crack() (bool, error)
-
+	NoUser() bool
 	SetTarget(target string)
 	SetIpPort(ip, port string)
 	SetService(service string)
 	SetTimeout(timeout int)
 	SetAuth(user, pass string)
+	SetProxy(proxy string)
 }
 
 type CrackBase struct {
-	Service, Target, Ip, Port, User, Pass string
-	Timeout                               int
+	Service, Target, Ip, Port, User, Pass, Proxy string // user can be use as other property, such as key/name/account
+	Timeout                                      int
+	NoUser_                                      bool
+}
+
+func (c *CrackBase) NoUser() bool {
+	return c.NoUser_
 }
 
 func (c *CrackBase) SetTarget(target string) {
@@ -44,46 +50,53 @@ func (c *CrackBase) SetTimeout(timeout int) {
 	c.Timeout = timeout
 }
 
+func (c *CrackBase) SetProxy(proxy string) {
+	c.Proxy = proxy
+}
+
 const (
-	CRACK_FTP           = "FTP"
-	CRACK_SSH           = "SSH"
-	CRACK_TELNET        = "TELNET"
-	CRACK_HTTPBASIC     = "HTTP"
-	CRACK_WMI           = "WMI"
-	CRACK_SNMP          = "SNMP"
-	CRACK_LDAP          = "LDAP"
-	CRACK_SMB           = "SMB"
-	CRACK_RTSP          = "RTSP"
-	CRACK_RSYNC         = "RSYNC"
-	CRACK_SOCKS5        = "SOCKS5"
-	CRACK_MSSQL         = "MSSQL"
-	CRACK_ORACLE        = "ORACLE"
-	CRACK_MQTT          = "MQTT"
-	CRACK_MYSQL         = "MYSQL"
-	CRACK_RDP           = "RDP"
-	CRACK_POSTGRESQL    = "POSTGRESQL"
-	CRACK_AMQP          = "AMQP"
-	CRACK_VNC           = "VNC"
-	CRACK_WINRM         = "WINRM"
-	CRACK_REDIS         = "REDIS"
-	CRACK_MEMCACHED     = "MEMCACHED"
-	CRACK_MONGODB       = "MONGODB"
-	CRACK_TOMCAT        = "TOMCAT"
-	CRACK_JENKINS       = "JENKINS"
-	CRACK_GITLAB        = "GITLAB"
-	CRACK_NACOS         = "NACOS"
-	CRACK_NEXUS         = "NEXUS"
-	CRACK_SVN           = "SVN"
-	CRACK_ELASTICSEARCH = "ELASTICSEARCH"
-	CRACK_WEBLOGIC      = "WEBLOGIC"
-	CRACK_EXPRESS       = "EXPRESS"
-	CRACK_HABASE_REST   = "HBASE_REST_API"
-	CRACK_FLASK         = "FLASK"
-	CRACK_GIN           = "GIN"
-	CRACK_PROMETHEUS    = "PROMETHEUS"
-	CRACK_APACHE        = "APACHE"
-	CRACK_GRAFANA       = "GRAFANA"
-	CRACK_MINIO         = "MINIO"
+	CRACK_FTP               = "FTP"
+	CRACK_SSH               = "SSH"
+	CRACK_TELNET            = "TELNET"
+	CRACK_HTTPBASIC         = "HTTP"
+	CRACK_WMI               = "WMI"
+	CRACK_SNMP              = "SNMP"
+	CRACK_LDAP              = "LDAP"
+	CRACK_SMB               = "SMB"
+	CRACK_RTSP              = "RTSP"
+	CRACK_RSYNC             = "RSYNC"
+	CRACK_SOCKS5            = "SOCKS5"
+	CRACK_MSSQL             = "MSSQL"
+	CRACK_ORACLE            = "ORACLE"
+	CRACK_MQTT              = "MQTT"
+	CRACK_MYSQL             = "MYSQL"
+	CRACK_RDP               = "RDP"
+	CRACK_POSTGRESQL        = "POSTGRESQL"
+	CRACK_AMQP              = "AMQP"
+	CRACK_VNC               = "VNC"
+	CRACK_WINRM             = "WINRM"
+	CRACK_REDIS             = "REDIS"
+	CRACK_MEMCACHED         = "MEMCACHED"
+	CRACK_MONGODB           = "MONGODB"
+	CRACK_TOMCAT            = "TOMCAT"
+	CRACK_JENKINS           = "JENKINS"
+	CRACK_GITLAB            = "GITLAB"
+	CRACK_NACOS             = "NACOS"
+	CRACK_NEXUS             = "NEXUS"
+	CRACK_SVN               = "SVN"
+	CRACK_ELASTICSEARCH     = "ELASTICSEARCH"
+	CRACK_WEBLOGIC          = "WEBLOGIC"
+	CRACK_EXPRESS           = "EXPRESS"
+	CRACK_HABASE_REST       = "HBASE_REST_API"
+	CRACK_FLASK             = "FLASK"
+	CRACK_GIN               = "GIN"
+	CRACK_PROMETHEUS        = "PROMETHEUS"
+	CRACK_APACHE            = "APACHE"
+	CRACK_GRAFANA           = "GRAFANA"
+	CRACK_MINIO             = "MINIO"
+	CRACK_WEBSHELL_SIMPLE   = "WEBSHELL"
+	CRACK_WEBSHELL_GODZILLA = "GODZILLA"
+	CRACK_WEBSHELL_BEHINDER = "BEHINDER"
 )
 
 type CrackTemplate func() Crack
@@ -148,7 +161,9 @@ var (
 			return &WinrmCracker{}
 		},
 		CRACK_REDIS: func() Crack {
-			return &RedisCracker{}
+			c := &RedisCracker{}
+			c.NoUser_ = true
+			return c
 		},
 		CRACK_MEMCACHED: func() Crack {
 			return &MemcachedCracker{}
@@ -188,6 +203,9 @@ var (
 		},
 		CRACK_MINIO: func() Crack {
 			return &MinioCracker{}
+		},
+		CRACK_WEBSHELL_SIMPLE:func() Crack {
+			return &SimpleWebshellCrack{}
 		},
 	}
 	DefaultPortService = map[int]string{

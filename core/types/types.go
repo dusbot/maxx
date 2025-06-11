@@ -6,6 +6,7 @@ type (
 		MaxTime   int
 		Timeout   int
 		Interval  int
+		NoUser    bool
 		Progress  bool
 		Thread    int
 		Targets   []string
