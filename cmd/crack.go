@@ -225,100 +225,82 @@ func parseArgs(ctx *cli.Context) {
 }
 
 func listService() {
-    colorCfg := renderer.ColorizedConfig{
-        Header: renderer.Tint{
-            FG: renderer.Colors{color.FgYellow, color.Bold},
-        },
-        Column: renderer.Tint{
-            FG: renderer.Colors{color.FgCyan},
-            Columns: []renderer.Tint{
-                {FG: renderer.Colors{color.FgMagenta}},
-                {FG: renderer.Colors{color.FgGreen}},
-                {FG: renderer.Colors{color.FgHiRed}},
-                {FG: renderer.Colors{color.FgBlue}},
-                {FG: renderer.Colors{color.FgHiBlue}},
-                {FG: renderer.Colors{color.FgCyan}},
-                {FG: renderer.Colors{color.FgHiCyan}},
-                {FG: renderer.Colors{color.FgHiWhite}},
-                {FG: renderer.Colors{color.FgHiYellow}},
-                {FG: renderer.Colors{color.FgWhite}},
-                {FG: renderer.Colors{color.FgHiMagenta}},
-            },
-        },
-        Footer: renderer.Tint{
-            FG: renderer.Colors{color.FgYellow, color.Bold},
-        },
-        Border:    renderer.Tint{FG: renderer.Colors{color.FgWhite}},
-        Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
-    }
+	colorCfg := renderer.ColorizedConfig{
+		Header: renderer.Tint{
+			FG: renderer.Colors{color.FgYellow, color.Bold},
+		},
+		Column: renderer.Tint{
+			FG: renderer.Colors{color.FgCyan},
+			Columns: []renderer.Tint{
+				{FG: renderer.Colors{color.FgMagenta}},
+				{FG: renderer.Colors{color.FgGreen}},
+				{FG: renderer.Colors{color.FgHiYellow}},
+			},
+		},
+		Footer: renderer.Tint{
+			FG: renderer.Colors{color.FgYellow, color.Bold},
+		},
+		Border:    renderer.Tint{FG: renderer.Colors{color.FgBlack}},
+		Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+	}
 
-    classOrder := []struct {
-        Key  string
-        Name string
-    }{
-        {"webshell", "Webshell"},
-        {"remote access", "Remote Access"},
-        {"mq/middleware", "MQ/Middleware"},
-        {"database", "Database"},
-        {"web server", "Web Server"},
-        {"tunneling", "Tunneling"},
-        {"file transfer", "File Transfer"},
-        {"mail service", "Mail Service"},
-    }
+	classOrder := []struct {
+		Key  string
+		Name string
+	}{
+		{"webshell", "Webshell"},
+		{"remote access", "Remote Access"},
+		{"mq/middleware", "MQ/Middleware"},
+		{"database", "Database"},
+		{"web server", "Web Server"},
+		{"tunneling", "Tunneling"},
+		{"file transfer", "File Transfer"},
+		{"mail service", "Mail Service"},
+	}
 
-    // 分类收集
-    classMap := make(map[string][]string)
-    total := 0
-    for name, svc := range crack.CrackServiceMap {
-        class := svc().Class()
-        classMap[class] = append(classMap[class], name)
-        total++
-    }
+	classMap := make(map[string][]string)
+	total := 0
+	for name, svc := range crack.CrackServiceMap {
+		class := svc().Class()
+		classMap[class] = append(classMap[class], name)
+		total++
+	}
 
-    maxRows := 0
-    for _, c := range classOrder {
-        if n := len(classMap[c.Key]); n > maxRows {
-            maxRows = n
-        }
-    }
-    headers := make([]string, len(classOrder))
-    for i, c := range classOrder {
-        headers[i] = c.Name
-    }
+	table := tablewriter.NewTable(os.Stdout, tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					AutoWrap: tw.WrapNormal,
+				},
+				Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
+				ColMaxWidths: tw.CellWidth{Global: 50},
+			},
+			Footer: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignLeft},
+			},
+			MaxWidth: 0,
+			Header:   tw.CellConfig{},
+			Debug:    false,
+			Stream:   tw.StreamConfig{},
+			Behavior: tw.Behavior{},
+			Widths:   tw.CellWidth{},
+		}))
+	table.Header([]string{"Class", "Service", "Count"})
 
-    table := tablewriter.NewTable(os.Stdout, tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
-        tablewriter.WithConfig(tablewriter.Config{
-            Row: tw.CellConfig{
-                Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal, MergeMode: tw.MergeHorizontal},
-                Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
-                ColMaxWidths: tw.CellWidth{Global: 25},
-            },
-            Footer: tw.CellConfig{
-                Alignment: tw.CellAlignment{Global: tw.AlignRight},
-            },
-        }))
-    table.Header(headers)
-
-    for i := 0; i < maxRows; i++ {
-        row := make([]string, len(classOrder))
-        for j, c := range classOrder {
-            services := classMap[c.Key]
-            if i < len(services) {
-                row[j] = services[i]
-            } else {
-                row[j] = ""
-            }
-        }
-        table.Append(row)
-    }
-
-    footer := make([]string, len(classOrder))
-    for i, c := range classOrder {
-        footer[i] = fmt.Sprintf("%d", len(classMap[c.Key]))
-    }
-    table.Footer(footer)
-    table.Render()
-    table.Close()
+	for _, c := range classOrder {
+		services := classMap[c.Key]
+		if len(services) == 0 {
+			continue
+		}
+		table.Append([]string{
+			c.Name,
+			strings.Join(services, ", "),
+			fmt.Sprintf("%d", len(services)),
+		})
+	}
+	table.Footer("Total", "", fmt.Sprintf("%d", total))
+	table.Render()
+	table.Close()
 }
 
 func ReadDict(dict string) (dictData []string, err error) {

@@ -109,6 +109,9 @@ const (
 	CRACK_APACHE            = "APACHE"
 	CRACK_GRAFANA           = "GRAFANA"
 	CRACK_MINIO             = "MINIO"
+	CRACK_ACTIVEMQ          = "ACTIVEMQ"
+	CRACK_IMAP              = "IMAP"
+	CRACK_POP3              = "POP3"
 	CRACK_WEBSHELL_SIMPLE   = "WEBSHELL"
 	CRACK_WEBSHELL_GODZILLA = "GODZILLA"
 	CRACK_WEBSHELL_BEHINDER = "BEHINDER"
@@ -218,6 +221,15 @@ var (
 		},
 		CRACK_MINIO: func() Crack {
 			return &MinioCracker{}
+		},
+		CRACK_ACTIVEMQ: func() Crack {
+			return &HttpCracker{}
+		},
+		CRACK_IMAP: func() Crack {
+			return &ImapCracker{}
+		},
+		CRACK_POP3: func() Crack {
+			return &Pop3Cracker{}
 		},
 		CRACK_WEBSHELL_SIMPLE: func() Crack {
 			c := &SimpleWebshellCrack{}
