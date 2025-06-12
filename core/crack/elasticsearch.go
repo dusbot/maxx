@@ -38,3 +38,7 @@ func (s *ElasticsearchCracker) Crack() (succ bool, err error) {
 	}
 	return false, err
 }
+
+func (*ElasticsearchCracker) Class() string {
+	return CLASS_MQ_MIDDLEWARE
+}

@@ -2,7 +2,6 @@ package crack
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -12,10 +11,6 @@ import (
 type OracleCracker struct {
 	CrackBase
 	ServiceName string
-}
-
-func (s *OracleCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (s *OracleCracker) Crack() (succ bool, err error) {
@@ -69,4 +64,8 @@ func serviceNameLogin(serviceName, user, pass, ip, port string, timeout int) (*s
 		return nil, err
 	}
 	return conn, nil
+}
+
+func (*OracleCracker) Class() string {
+	return CLASS_DB
 }

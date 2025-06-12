@@ -39,3 +39,7 @@ func (t *TelnetCracker) Crack() (succ bool, err error) {
 	}
 	return true, nil
 }
+
+func (*TelnetCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
+}

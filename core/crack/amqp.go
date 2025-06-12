@@ -32,3 +32,7 @@ func (s *AmqpCracker) Crack() (succ bool, err error) {
 	defer conn.Close()
 	return true, nil
 }
+
+func (*AmqpCracker) Class() string {
+	return CLASS_MQ_MIDDLEWARE
+}

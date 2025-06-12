@@ -68,3 +68,7 @@ func (s *MssqlCracker) Crack() (succ bool, err error) {
 	defer conn.Close()
 	return true, nil
 }
+
+func (*MssqlCracker) Class() string {
+	return CLASS_DB
+}

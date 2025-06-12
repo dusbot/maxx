@@ -39,3 +39,7 @@ func (r *RedisCracker) Crack() (succ bool, err error) {
 	}
 	return true, nil
 }
+
+func (*RedisCracker) Class() string {
+	return CLASS_DB
+}

@@ -1,17 +1,11 @@
 package crack
 
 import (
-	"errors"
-
 	"github.com/dusbot/maxx/libs/C-Sto/goWMIExec/pkg/wmiexec"
 )
 
 type WmiCracker struct {
 	CrackBase
-}
-
-func (t *WmiCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (t *WmiCracker) Crack() (succ bool, err error) {
@@ -34,4 +28,8 @@ func WMIExec(target, username, password, hash, domain, clientHostname, binding s
 	}
 	flag = true
 	return
+}
+
+func (*WmiCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
 }

@@ -79,3 +79,7 @@ func SplitUserDomain(user string) (string, string) {
 	}
 	return user, domain
 }
+
+func (*SmbCracker) Class() string {
+	return CLASS_FILE_TRANSFER
+}

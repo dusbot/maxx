@@ -1,7 +1,6 @@
 package crack
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,10 +14,6 @@ import (
 
 type SimpleWebshellCrack struct {
 	CrackBase
-}
-
-func (o *SimpleWebshellCrack) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (o *SimpleWebshellCrack) Crack() (succ bool, err error) {
@@ -103,4 +98,8 @@ func (o *SimpleWebshellCrack) Crack() (succ bool, err error) {
 	}
 
 	return
+}
+
+func (*SimpleWebshellCrack) Class() string {
+	return CLASS_WEBSHELL
 }

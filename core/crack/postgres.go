@@ -2,7 +2,6 @@ package crack
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -12,10 +11,6 @@ import (
 type PostgresCracker struct {
 	CrackBase
 	DBName string
-}
-
-func (f *PostgresCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (f *PostgresCracker) Crack() (succ bool, err error) {
@@ -52,4 +47,8 @@ func (f *PostgresCracker) Crack() (succ bool, err error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (*PostgresCracker) Class() string {
+	return CLASS_DB
 }

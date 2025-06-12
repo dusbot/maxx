@@ -10,6 +10,7 @@ type Crack interface {
 	Ping() (bool, error)
 	Crack() (bool, error)
 	NoUser() bool
+	Class() string
 	SetTarget(target string)
 	SetIpPort(ip, port string)
 	SetService(service string)
@@ -22,6 +23,16 @@ type CrackBase struct {
 	Service, Target, Ip, Port, User, Pass, Proxy string // user can be use as other property, such as key/name/account
 	Timeout                                      int
 	NoUser_                                      bool
+}
+
+// default implementation: Ping
+func (*CrackBase) Ping() (bool, error) {
+	return false, errors.New("unsupported")
+}
+
+// default implementation: Crack
+func (*CrackBase) Crack() (bool, error) {
+	return false, errors.New("unsupported")
 }
 
 func (c *CrackBase) NoUser() bool {
@@ -52,6 +63,10 @@ func (c *CrackBase) SetTimeout(timeout int) {
 
 func (c *CrackBase) SetProxy(proxy string) {
 	c.Proxy = proxy
+}
+
+func (c *CrackBase) Class() string {
+	return "other"
 }
 
 const (
@@ -209,6 +224,16 @@ var (
 			c.NoUser_ = true
 			return c
 		},
+		CRACK_WEBSHELL_GODZILLA: func() Crack {
+			c := &GodzillaCrack{}
+			c.NoUser_ = true
+			return c
+		},
+		CRACK_WEBSHELL_BEHINDER: func() Crack {
+			c := &BehinderCrack{}
+			c.NoUser_ = true
+			return c
+		},
 	}
 	DefaultPortService = map[int]string{
 		21:    CRACK_FTP,
@@ -244,4 +269,14 @@ var (
 		8084:  CRACK_GITLAB,
 		8443:  CRACK_GITLAB,
 	}
+
+	CLASS_WEBSHELL      = "webshell"
+	CLASS_REMOTE_ACCESS = "remote access"
+	CLASS_OTHER         = "other"
+	CLASS_MQ_MIDDLEWARE = "mq/middleware"
+	CLASS_DB            = "database"
+	CLASS_WEB           = "web server"
+	CLASS_TUNNELING     = "tunneling"
+	CLASS_FILE_TRANSFER = "file transfer"
+	CLASS_EMAIL         = "mail service"
 )

@@ -113,3 +113,7 @@ func (s *Socks5Cracker) Crack() (succ bool, err error) {
 
 	return true, nil
 }
+
+func (*Socks5Cracker) Class() string {
+	return CLASS_TUNNELING
+}

@@ -49,3 +49,7 @@ func (s *SnmpCracker) Crack() (succ bool, err error) {
 	}
 	return false, err
 }
+
+func (*SnmpCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
+}

@@ -225,60 +225,100 @@ func parseArgs(ctx *cli.Context) {
 }
 
 func listService() {
-	colorCfg := renderer.ColorizedConfig{
-		Header: renderer.Tint{
-			FG: renderer.Colors{color.FgHiWhite, color.Bold},
-			BG: renderer.Colors{color.BgBlue},
-		},
-		Column: renderer.Tint{
-			FG: renderer.Colors{color.FgCyan},
-			Columns: []renderer.Tint{
-				{FG: renderer.Colors{color.FgMagenta}},
-				{},
-				{FG: renderer.Colors{color.FgHiRed}},
-			},
-		},
-		Footer: renderer.Tint{
-			FG: renderer.Colors{color.FgYellow, color.Bold},
-			Columns: []renderer.Tint{
-				{},
-				{FG: renderer.Colors{color.FgHiYellow}},
-				{},
-			},
-		},
-		Border:    renderer.Tint{FG: renderer.Colors{color.FgWhite}},
-		Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
-	}
-	table := tablewriter.NewTable(os.Stdout, tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
-		tablewriter.WithConfig(tablewriter.Config{
-			Row: tw.CellConfig{
-				Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal, MergeMode: tw.MergeHorizontal},
-				Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
-				ColMaxWidths: tw.CellWidth{Global: 25},
-			},
-			Footer: tw.CellConfig{
-				Alignment: tw.CellAlignment{Global: tw.AlignRight},
-			},
-		}))
-	table.Header([]string{"Services", "Available", "for", "Credential", "Cracking"})
-	services := make([]string, 0, len(crack.CrackServiceMap))
-	for service := range crack.CrackServiceMap {
-		services = append(services, service)
-	}
-	for i := 0; i < len(services); i += 7 {
-		end := i + 7
-		if end > len(services) {
-			end = len(services)
-		}
-		row := services[i:end]
-		for len(row) < 7 {
-			row = append(row, "")
-		}
-		table.Append(row)
-	}
-	table.Footer("", "", "", "", "", "Total", fmt.Sprintf("%d", len(crack.CrackServiceMap)))
-	table.Render()
-	table.Close()
+    colorCfg := renderer.ColorizedConfig{
+        Header: renderer.Tint{
+            FG: renderer.Colors{color.FgYellow, color.Bold},
+        },
+        Column: renderer.Tint{
+            FG: renderer.Colors{color.FgCyan},
+            Columns: []renderer.Tint{
+                {FG: renderer.Colors{color.FgMagenta}},
+                {FG: renderer.Colors{color.FgGreen}},
+                {FG: renderer.Colors{color.FgHiRed}},
+                {FG: renderer.Colors{color.FgBlue}},
+                {FG: renderer.Colors{color.FgHiBlue}},
+                {FG: renderer.Colors{color.FgCyan}},
+                {FG: renderer.Colors{color.FgHiCyan}},
+                {FG: renderer.Colors{color.FgHiWhite}},
+                {FG: renderer.Colors{color.FgHiYellow}},
+                {FG: renderer.Colors{color.FgWhite}},
+                {FG: renderer.Colors{color.FgHiMagenta}},
+            },
+        },
+        Footer: renderer.Tint{
+            FG: renderer.Colors{color.FgYellow, color.Bold},
+        },
+        Border:    renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+        Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+    }
+
+    classOrder := []struct {
+        Key  string
+        Name string
+    }{
+        {"webshell", "Webshell"},
+        {"remote access", "Remote Access"},
+        {"mq/middleware", "MQ/Middleware"},
+        {"database", "Database"},
+        {"web server", "Web Server"},
+        {"tunneling", "Tunneling"},
+        {"file transfer", "File Transfer"},
+        {"mail service", "Mail Service"},
+    }
+
+    // 分类收集
+    classMap := make(map[string][]string)
+    total := 0
+    for name, svc := range crack.CrackServiceMap {
+        class := svc().Class()
+        classMap[class] = append(classMap[class], name)
+        total++
+    }
+
+    maxRows := 0
+    for _, c := range classOrder {
+        if n := len(classMap[c.Key]); n > maxRows {
+            maxRows = n
+        }
+    }
+    headers := make([]string, len(classOrder))
+    for i, c := range classOrder {
+        headers[i] = c.Name
+    }
+
+    table := tablewriter.NewTable(os.Stdout, tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
+        tablewriter.WithConfig(tablewriter.Config{
+            Row: tw.CellConfig{
+                Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNormal, MergeMode: tw.MergeHorizontal},
+                Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
+                ColMaxWidths: tw.CellWidth{Global: 25},
+            },
+            Footer: tw.CellConfig{
+                Alignment: tw.CellAlignment{Global: tw.AlignRight},
+            },
+        }))
+    table.Header(headers)
+
+    for i := 0; i < maxRows; i++ {
+        row := make([]string, len(classOrder))
+        for j, c := range classOrder {
+            services := classMap[c.Key]
+            if i < len(services) {
+                row[j] = services[i]
+            } else {
+                row[j] = ""
+            }
+        }
+        table.Append(row)
+    }
+
+    footer := make([]string, len(classOrder))
+    for i, c := range classOrder {
+        footer[i] = fmt.Sprintf("%d", len(classMap[c.Key]))
+    }
+    table.Footer(footer)
+    table.Render()
+    table.Close()
 }
 
 func ReadDict(dict string) (dictData []string, err error) {

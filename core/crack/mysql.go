@@ -2,7 +2,6 @@ package crack
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/go-sql-driver/mysql"
@@ -11,10 +10,6 @@ import (
 
 type MysqlCracker struct {
 	CrackBase
-}
-
-func (s *MysqlCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (s *MysqlCracker) Crack() (succ bool, err error) {
@@ -42,4 +37,8 @@ type nilLog struct {
 
 func (l nilLog) Print(v ...interface{}) {
 
+}
+
+func (*MysqlCracker) Class() string {
+	return CLASS_DB
 }

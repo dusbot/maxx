@@ -60,3 +60,7 @@ func (v *VncCracker) Crack() (succ bool, err error) {
 	defer conn.Close()
 	return true, nil
 }
+
+func (*VncCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
+}

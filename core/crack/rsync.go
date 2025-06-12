@@ -35,3 +35,7 @@ func (s *RsyncCracker) Crack() (succ bool, err error) {
 	}
 	return true, nil
 }
+
+func (*RsyncCracker) Class() string {
+	return CLASS_FILE_TRANSFER
+}

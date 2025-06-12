@@ -2,7 +2,6 @@ package crack
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,10 +11,6 @@ import (
 
 type MongoCracker struct {
 	CrackBase
-}
-
-func (r *MongoCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (r *MongoCracker) Crack() (succ bool, err error) {
@@ -43,4 +38,8 @@ func (r *MongoCracker) Crack() (succ bool, err error) {
 	}
 
 	return true, nil
+}
+
+func (*MongoCracker) Class() string {
+	return CLASS_DB
 }

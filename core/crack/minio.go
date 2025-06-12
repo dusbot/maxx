@@ -2,7 +2,6 @@ package crack
 
 import (
 	"context"
-	"errors"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -10,10 +9,6 @@ import (
 
 type MinioCracker struct {
 	CrackBase
-}
-
-func (r *MinioCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (m *MinioCracker) Crack() (succ bool, err error) {
@@ -30,4 +25,8 @@ func (m *MinioCracker) Crack() (succ bool, err error) {
 	}
 	succ = true
 	return
+}
+
+func (*MinioCracker) Class() string {
+	return CLASS_FILE_TRANSFER
 }

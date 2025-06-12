@@ -29,3 +29,7 @@ func (r *MemcachedCracker) Crack() (succ bool, err error) {
 	defer client.Close()
 	return true, nil
 }
+
+func (*MemcachedCracker) Class() string {
+	return CLASS_DB
+}

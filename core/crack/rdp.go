@@ -1,17 +1,11 @@
 package crack
 
 import (
-	"errors"
-
 	"github.com/dusbot/maxx/libs/grdp"
 )
 
 type RdpCracker struct {
 	CrackBase
-}
-
-func (f *RdpCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (f *RdpCracker) Crack() (succ bool, err error) {
@@ -21,4 +15,8 @@ func (f *RdpCracker) Crack() (succ bool, err error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (*RdpCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
 }

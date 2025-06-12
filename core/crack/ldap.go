@@ -42,3 +42,7 @@ func (l *LdapCracker) Crack() (succ bool, err error) {
 	}
 	return
 }
+
+func (*LdapCracker) Class() string {
+	return CLASS_FILE_TRANSFER
+}

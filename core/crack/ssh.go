@@ -42,3 +42,7 @@ func (f *SshCracker) Crack() (succ bool, err error) {
 		return
 	}
 }
+
+func (*SshCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
+}

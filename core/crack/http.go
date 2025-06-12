@@ -72,3 +72,7 @@ func (NoLogger) Warnf(format string, v ...any) {
 func (NoLogger) Debugf(format string, v ...any) {
 
 }
+
+func (*HttpCracker) Class() string {
+	return CLASS_WEB
+}

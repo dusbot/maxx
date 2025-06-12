@@ -2,7 +2,6 @@ package crack
 
 import (
 	"context"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -12,10 +11,6 @@ import (
 
 type WinrmCracker struct {
 	CrackBase
-}
-
-func (s *WinrmCracker) Ping() (succ bool, err error) {
-	return false, errors.ErrUnsupported
 }
 
 func (w *WinrmCracker) Crack() (succ bool, err error) {
@@ -50,4 +45,8 @@ func (w *WinrmCracker) Crack() (succ bool, err error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (*WinrmCracker) Class() string {
+	return CLASS_REMOTE_ACCESS
 }

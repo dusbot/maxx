@@ -132,8 +132,11 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 			}
 			users := task.Users         // by default
 			passwords := task.Passwords // by default
-			if crackService.NoUser() {
+			if crackService.NoUser() || len(users) == 0 {
 				users = []string{""}
+			}
+			if len(passwords) == 0 {
+				passwords = []string{""}
 			}
 			for _, user := range users {
 				for _, pass := range passwords {

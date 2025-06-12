@@ -34,3 +34,7 @@ func (s *MqttCracker) Crack() (succ bool, err error) {
 	defer client.Disconnect(250)
 	return true, nil
 }
+
+func (*MqttCracker) Class() string {
+	return CLASS_MQ_MIDDLEWARE
+}
