@@ -3,9 +3,19 @@ package utils
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+func GetFileExt(url string) string {
+	re := regexp.MustCompile(`\.([a-zA-Z0-9]+)(?:\?|$)`)
+	match := re.FindStringSubmatch(url)
+	if len(match) > 1 {
+		return match[1]
+	}
+	return ""
+}
 
 func ParseNetworkInput(input string) []string {
 	var results []string

@@ -17,6 +17,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.11
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.9.2
+	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
 	github.com/gookit/color v1.5.4
 	github.com/gosnmp/gosnmp v1.41.0
 	github.com/hirochachacha/go-smb2 v1.1.0
@@ -42,6 +43,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.6
 	github.com/xdg-go/scram v1.1.2
 	github.com/yaklang/yaklang v1.3.3
+	github.com/yuin/charsetutil v1.0.0
 	go.mongodb.org/mongo-driver v1.17.4
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.38.0
