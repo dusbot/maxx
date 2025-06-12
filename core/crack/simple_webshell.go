@@ -86,6 +86,9 @@ func (o *SimpleWebshellCrack) Crack() (succ bool, err error) {
 						}
 					}
 				} else if payloadInfo.Type == TYP_URL {
+					if callback.Stop != nil {
+						defer callback.Stop()
+					}
 					if callback.SignalChan != nil {
 						if <-callback.SignalChan {
 							slog.Printf(slog.WARN, "Disover a webshell[%s] with payload[%s]", o.Target, finalPayload)

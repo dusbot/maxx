@@ -204,8 +204,10 @@ var (
 		CRACK_MINIO: func() Crack {
 			return &MinioCracker{}
 		},
-		CRACK_WEBSHELL_SIMPLE:func() Crack {
-			return &SimpleWebshellCrack{}
+		CRACK_WEBSHELL_SIMPLE: func() Crack {
+			c := &SimpleWebshellCrack{}
+			c.NoUser_ = true
+			return c
 		},
 	}
 	DefaultPortService = map[int]string{

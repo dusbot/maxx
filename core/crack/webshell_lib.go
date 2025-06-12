@@ -78,7 +78,7 @@ func generatePayload(info payloadInfo) (payload, maxx_ string, callback uhttp.Ca
 		}()
 		accessUrl, stop, err := uhttp.StartSimpleHttpServer("", 10, callback)
 		if err == nil {
-			defer stop()
+			callback.Stop = stop
 			payload = fmt.Sprintf("curl %s?%s=%s", accessUrl, MAXX_, maxx_)
 		}
 	}

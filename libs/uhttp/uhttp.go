@@ -82,6 +82,7 @@ type Callback struct {
 	Signal     string
 	SignalChan chan bool
 	OnRequest  func(r *http.Request, signal string, signalChan chan bool)
+	Stop func()
 }
 
 func StartSimpleHttpServer(host string, maxRuntime int, callbacks ...Callback) (accessURL string, stopFunc func(), err error) {
