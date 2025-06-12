@@ -26,3 +26,5 @@ maxx crack -T target.txt -p pass.txt
 ![](../static/images/webshell1.png)
 
 ![](../static/images/webshell2.png)
+
+![](../static/images/godzilla.png)

@@ -237,9 +237,7 @@ var (
 			return c
 		},
 		CRACK_WEBSHELL_GODZILLA: func() Crack {
-			c := &GodzillaCrack{}
-			c.NoUser_ = true
-			return c
+			return &GodzillaCrack{}
 		},
 		CRACK_WEBSHELL_BEHINDER: func() Crack {
 			c := &BehinderCrack{}

@@ -15,7 +15,7 @@ type BehinderCrack struct {
 
 func (b *BehinderCrack) Crack() (succ bool, err error) {
 	fileExt := utils.GetFileExt(b.Target)
-	b.Target = strings.ReplaceAll(strings.ToLower(b.Target), CRACK_WEBSHELL_GODZILLA+"://", "http://")
+	b.Target = strings.ReplaceAll(strings.ToLower(b.Target), strings.ToLower(CRACK_WEBSHELL_BEHINDER)+"://", "http://")
 	if fileExt == "" {
 		slog.Printf(slog.WARN, "Skip target[%s] file extension is empty", b.Target)
 		return
@@ -29,7 +29,7 @@ func (b *BehinderCrack) Crack() (succ bool, err error) {
 			Url:      b.Target,
 			Password: b.Pass,
 			Script:   shell.ScriptType(fileExt),
-			Proxy: b.Proxy,
+			Proxy:    b.Proxy,
 		},
 	}
 	var bi *ws.BehinderInfo
