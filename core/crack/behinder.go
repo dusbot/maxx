@@ -1,6 +1,8 @@
 package crack
 
 import (
+	"strings"
+
 	"github.com/dusbot/maxx/libs/slog"
 	"github.com/dusbot/maxx/libs/utils"
 	ws "github.com/dusbot/maxx/libs/webshell"
@@ -13,6 +15,7 @@ type BehinderCrack struct {
 
 func (b *BehinderCrack) Crack() (succ bool, err error) {
 	fileExt := utils.GetFileExt(b.Target)
+	b.Target = strings.ReplaceAll(strings.ToLower(b.Target), CRACK_WEBSHELL_GODZILLA+"://", "http://")
 	if fileExt == "" {
 		slog.Printf(slog.WARN, "Skip target[%s] file extension is empty", b.Target)
 		return
