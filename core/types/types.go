@@ -12,6 +12,9 @@ type (
 		Targets   []string
 		Users     []string
 		Passwords []string
+
+		ResultChan   chan Result
+		ProgressChan chan int
 	}
 
 	Result struct {

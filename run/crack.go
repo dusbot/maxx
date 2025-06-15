@@ -25,6 +25,12 @@ import (
 var consoleLock sync.Mutex
 
 func Crack(ctx context.Context, task *types.Task) (err error) {
+	if task.ProgressChan != nil {
+		defer close(task.ProgressChan)
+	}
+	if task.ResultChan != nil {
+		defer close(task.ResultChan)
+	}
 	start := time.Now()
 	defer func() {
 		slog.Printf(slog.INFO, "Total cost: [%s]", time.Since(start).String())
@@ -43,6 +49,10 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 		progressTotal = (int64)(len(task.Targets)) * (int64)(len(task.Users)) * (int64)(len(task.Passwords))
 		targetStep    = (int64)(len(task.Users)) * (int64)(len(task.Passwords))
 	)
+	if progressTotal == 0 {
+		slog.Printf(slog.WARN, "No target to crack, total: 0")
+		return
+	}
 	if task.Progress {
 		go func() {
 			currProgressColor := make([]*color.Style256, 12)
@@ -55,9 +65,16 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 			for {
 				select {
 				case <-ticker.C:
+					currProgress := progressBar.Load()
 					slog.Printf(slog.WARN, "%s/%s",
-						colorR.Gradient(fmt.Sprintf("Progress:%d", progressBar.Load()), currProgressColor),
+						colorR.Gradient(fmt.Sprintf("Progress:%d", currProgress), currProgressColor),
 						colorR.Gradient(fmt.Sprintf("%d", progressTotal), progressTotalColor))
+					if task.ProgressChan != nil {
+						go func() {
+							progress := int(progressBar.Load() * 100 / progressTotal)
+							task.ProgressChan <- progress
+						}()
+					}
 				case <-done:
 					return
 				case <-ctx.Done():
@@ -108,6 +125,17 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 			crackService.SetTarget(ipPort)
 			crackService.SetTimeout(task.Timeout)
 			if succ, err := crackService.Ping(); err == nil && succ {
+				if task.ResultChan != nil {
+					go func() {
+						task.ResultChan <- types.Result{
+							Target:   target,
+							Port:     0,
+							Protocol: service,
+							User:     "",
+							Pass:     "",
+						}
+					}()
+				}
 				if task.Verbose {
 					slog.Printf(slog.DATA, "Discovered No-auth Service[%s] target[%s]", service, target)
 				}
@@ -160,6 +188,17 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 									slog.Printf(slog.DEBUG, "Crack target[%s] with user[%s] pass[%s]", target, user, pass)
 								}
 								if succ, err := crackService.Crack(); err == nil && succ {
+									if task.ResultChan != nil {
+										go func() {
+											task.ResultChan <- types.Result{
+												Target:   target,
+												Port:     0,
+												Protocol: service,
+												User:     user,
+												Pass:     pass,
+											}
+										}()
+									}
 									if task.Verbose {
 										slog.Printf(slog.DATA, "Discovered auth Service[%s] target[%s] with user[%s] pass[%s]", service, target, user, pass)
 									}
