@@ -32,7 +32,7 @@ func main() {
 		Thread:       1024,
 		Targets:      []string{"http://192.168.0.1/index.html#login"},
 		Users:        []string{"admin"},
-		Passwords:    []string{"1356511401"},
+		Passwords:    []string{"admin"},
 		ResultChan:   resultChan,
 		ProgressChan: progressChan,
 	})
