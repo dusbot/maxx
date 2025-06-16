@@ -1,5 +1,7 @@
 package types
 
+import "sync/atomic"
+
 type (
 	Task struct {
 		Verbose   bool
@@ -13,8 +15,9 @@ type (
 		Users     []string
 		Passwords []string
 
-		ResultChan   chan Result
-		ProgressChan chan Progress
+		ResultChan                           chan Result
+		ProgressChan                         chan Progress
+		ResultChanClosed, ProgressChanClosed atomic.Bool
 	}
 
 	Progress struct {

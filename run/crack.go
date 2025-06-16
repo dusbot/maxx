@@ -26,10 +26,16 @@ var consoleLock sync.Mutex
 
 func Crack(ctx context.Context, task *types.Task) (err error) {
 	if task.ProgressChan != nil {
-		defer close(task.ProgressChan)
+		defer func() {
+			task.ProgressChanClosed.Store(true)
+			close(task.ProgressChan)
+		}()
 	}
 	if task.ResultChan != nil {
-		defer close(task.ResultChan)
+		defer func() {
+			task.ResultChanClosed.Store(true)
+			close(task.ResultChan)
+		}()
 	}
 	start := time.Now()
 	defer func() {
@@ -69,14 +75,16 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 					slog.Printf(slog.WARN, "%s/%s",
 						colorR.Gradient(fmt.Sprintf("Progress:%d", currProgress), currProgressColor),
 						colorR.Gradient(fmt.Sprintf("%d", progressTotal), progressTotalColor))
-					if task.ProgressChan != nil {
+					if task.ProgressChan != nil && !task.ProgressChanClosed.Load() {
 						go func() {
 							progress := types.Progress{
 								Total:    progressTotal,
 								Done:     currProgress,
 								Progress: float64(progressBar.Load()) / float64(progressTotal),
 							}
-							task.ProgressChan <- progress
+							if !task.ProgressChanClosed.Load() { // double check
+								task.ProgressChan <- progress
+							}
 						}()
 					}
 				case <-done:
@@ -129,14 +137,16 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 			crackService.SetTarget(ipPort)
 			crackService.SetTimeout(task.Timeout)
 			if succ, err := crackService.Ping(); err == nil && succ {
-				if task.ResultChan != nil {
+				if task.ResultChan != nil && !task.ResultChanClosed.Load() {
 					go func() {
-						task.ResultChan <- types.Result{
-							Target:   target,
-							Port:     0,
-							Protocol: service,
-							User:     "",
-							Pass:     "",
+						if !task.ResultChanClosed.Load() { //double check
+							task.ResultChan <- types.Result{
+								Target:   target,
+								Port:     0,
+								Protocol: service,
+								User:     "",
+								Pass:     "",
+							}
 						}
 					}()
 				}
@@ -192,14 +202,16 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 									slog.Printf(slog.DEBUG, "Crack target[%s] with user[%s] pass[%s]", target, user, pass)
 								}
 								if succ, err := crackService.Crack(); err == nil && succ {
-									if task.ResultChan != nil {
+									if task.ResultChan != nil && !task.ResultChanClosed.Load() {
 										go func() {
-											task.ResultChan <- types.Result{
-												Target:   target,
-												Port:     0,
-												Protocol: service,
-												User:     user,
-												Pass:     pass,
+											if !task.ResultChanClosed.Load() { //double check
+												task.ResultChan <- types.Result{
+													Target:   target,
+													Port:     0,
+													Protocol: service,
+													User:     user,
+													Pass:     pass,
+												}
 											}
 										}()
 									}
