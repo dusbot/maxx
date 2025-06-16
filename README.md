@@ -1,8 +1,10 @@
-<p align="center"> <img src="static/images/maxx_logo.svg" width="100px" alt="milkyway"> </p>
+<p align="center"> <img src="static/images/maxx_logo.svg" width="100px" alt="maxx"> </p>
 
 [![Latest release](https://img.shields.io/github/v/release/dusbot/maxx)](https://github.com/dusbot/maxx/releases/latest)![GitHub Release Date](https://img.shields.io/github/release-date/dusbot/maxx)![GitHub All Releases](https://img.shields.io/github/downloads/dusbot/maxx/total)[![GitHub issues](https://img.shields.io/github/issues/dusbot/maxx)](https://github.com/dusbot/maxx/issues)
 
 > This tool is intended for use by authorized security testers only. Unauthorized testing is prohibited and will be at your own risk.
+
+[中文](README_CN.md)
 
 ## MaXx
 

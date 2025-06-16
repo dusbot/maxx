@@ -22,7 +22,9 @@ import (
 	"github.com/panjf2000/ants/v2"
 )
 
-var consoleLock sync.Mutex
+var (
+	consoleLock sync.Mutex
+)
 
 func Crack(ctx context.Context, task *types.Task) (err error) {
 	if task.ProgressChan != nil {
@@ -50,6 +52,12 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 	// slog.Printf(slog.DATA, "task:%+v", task)
 	var wg sync.WaitGroup
 	done := make(chan struct{})
+	var doneOnce sync.Once
+	defer func() {
+		doneOnce.Do(func() {
+			close(done)
+		})
+	}()
 	var (
 		progressBar   atomic.Int64
 		progressTotal = (int64)(len(task.Targets)) * (int64)(len(task.Users)) * (int64)(len(task.Passwords))
@@ -157,7 +165,7 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 				table.Header([]string{"Target", "Service(No-auth)"})
 				table.Append([]string{target, service})
 				table.Render()
-				table.Close()
+				defer table.Close()
 				progressBar.Add(targetStep)
 				continue
 			} else {
@@ -241,7 +249,9 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 	}
 	go func() {
 		wg.Wait()
-		close(done)
+		doneOnce.Do(func() {
+			close(done)
+		})
 	}()
 	select {
 	case <-done:
