@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - '*'
+      - '!*dev*'
+      - '!*beta*'
+      - '!*alpha*'
+      - '!*-rc*'
 
 permissions:
   contents: write

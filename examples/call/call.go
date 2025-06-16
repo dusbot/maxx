@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	progressChan := make(chan int, 1<<8)
+	progressChan := make(chan types.Progress, 1<<8)
 	resultChan := make(chan types.Result, 1<<8)
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -19,20 +19,22 @@ func main() {
 		for result := range resultChan {
 			fmt.Printf("Result:%+v\n", result)
 		}
+		fmt.Println("ResultChan closed")
 	}()
 	go func() {
 		defer wg.Done()
 		for progress := range progressChan {
 			fmt.Printf("Progress:%d\n", progress)
 		}
+		fmt.Println("ProgressChan closed")
 	}()
 	err := run.Crack(context.Background(), &types.Task{
 		Interval:     100,
 		Progress:     true,
 		Thread:       1024,
-		Targets:      []string{"http://192.168.0.1/index.html#login"},
-		Users:        []string{"admin"},
-		Passwords:    []string{"admin"},
+		Targets:      []string{"http://192.169.1.1:1080"},
+		Users:        []string{"username"},
+		Passwords:    []string{"password"},
 		ResultChan:   resultChan,
 		ProgressChan: progressChan,
 	})

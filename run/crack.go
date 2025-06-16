@@ -71,7 +71,11 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 						colorR.Gradient(fmt.Sprintf("%d", progressTotal), progressTotalColor))
 					if task.ProgressChan != nil {
 						go func() {
-							progress := int(progressBar.Load() * 100 / progressTotal)
+							progress := types.Progress{
+								Total:    progressTotal,
+								Done:     currProgress,
+								Progress: int(progressBar.Load() * 100 / progressTotal),
+							}
 							task.ProgressChan <- progress
 						}()
 					}

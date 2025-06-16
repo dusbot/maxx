@@ -14,7 +14,13 @@ type (
 		Passwords []string
 
 		ResultChan   chan Result
-		ProgressChan chan int
+		ProgressChan chan Progress
+	}
+
+	Progress struct {
+		Total    int64
+		Done     int64
+		Progress int
 	}
 
 	Result struct {
