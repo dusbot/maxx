@@ -74,7 +74,7 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 							progress := types.Progress{
 								Total:    progressTotal,
 								Done:     currProgress,
-								Progress: int(progressBar.Load() * 100 / progressTotal),
+								Progress: float64(progressBar.Load()) / float64(progressTotal),
 							}
 							task.ProgressChan <- progress
 						}()

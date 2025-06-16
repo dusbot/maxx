@@ -20,7 +20,7 @@ type (
 	Progress struct {
 		Total    int64
 		Done     int64
-		Progress int
+		Progress float64
 	}
 
 	Result struct {

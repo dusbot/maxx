@@ -24,7 +24,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		for progress := range progressChan {
-			fmt.Printf("Progress:%d\n", progress)
+			fmt.Printf("Progress:%v\n", progress)
 		}
 		fmt.Println("ProgressChan closed")
 	}()
