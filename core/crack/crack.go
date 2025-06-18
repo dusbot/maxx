@@ -17,12 +17,13 @@ type Crack interface {
 	SetTimeout(timeout int)
 	SetAuth(user, pass string)
 	SetProxy(proxy string)
+	EnableVerbose()
 }
 
 type CrackBase struct {
 	Service, Target, Ip, Port, User, Pass, Proxy string // user can be use as other property, such as key/name/account
 	Timeout                                      int
-	NoUser_                                      bool
+	Verbose, NoUser_                             bool
 }
 
 // default implementation: Ping
@@ -63,6 +64,10 @@ func (c *CrackBase) SetTimeout(timeout int) {
 
 func (c *CrackBase) SetProxy(proxy string) {
 	c.Proxy = proxy
+}
+
+func (c *CrackBase) EnableVerbose() {
+	c.Verbose = true
 }
 
 func (c *CrackBase) Class() string {

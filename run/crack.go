@@ -144,6 +144,9 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 			}
 			crackService.SetTarget(ipPort)
 			crackService.SetTimeout(task.Timeout)
+			if task.Verbose {
+				crackService.EnableVerbose()
+			}
 			if succ, err := crackService.Ping(); err == nil && succ {
 				if task.ResultChan != nil && !task.ResultChanClosed.Load() {
 					go func() {
