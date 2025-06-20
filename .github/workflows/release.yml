@@ -34,7 +34,11 @@ jobs:
 
       - name: UPX version
         run: upx --version
-
+      - name: Install libpcap-dev (Linux)
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+      - name: Install MacOS cross headers     
+        run: sudo apt-get install -y osxcross
+        if: false
       -
         name: "Create release on GitHub"
         uses: goreleaser/goreleaser-action@v4
