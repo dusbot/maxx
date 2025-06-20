@@ -15,10 +15,11 @@ import (
 )
 
 var (
-	interfaces      []string
-	listInterface   bool
-	bpfFilter       string
-	saveTo, writeTo string
+	interfaces         []string
+	listInterface      bool
+	bpfFilter          string
+	saveTo, writeTo    string
+	verbose, printHTTP bool
 )
 
 var Listen = &cli.Command{
@@ -50,6 +51,16 @@ var Listen = &cli.Command{
 			Name:    "write-to",
 			Usage:   "File to write the captured packets to (pcap format)",
 			Aliases: []string{"w"},
+		},
+		&cli.BoolFlag{
+			Name:    "verbose",
+			Usage:   "Enable verbose output",
+			Aliases: []string{"v"},
+		},
+		&cli.BoolFlag{
+			Name:    "httpprint",
+			Usage:   "Print HTTP requests and responses",
+			Aliases: []string{"ph"},
 		},
 	},
 	Action: func(c *cli.Context) error {
@@ -83,6 +94,8 @@ var Listen = &cli.Command{
 		saveTo = c.String("save-to")
 		writeTo = c.String("write-to")
 		interfaces = c.StringSlice("interface")
+		verbose = c.Bool("verbose")
+		printHTTP = c.Bool("httpprint")
 		if len(interfaces) == 0 {
 			devs, err := pcap.FindAllDevs()
 			if err != nil {
@@ -101,7 +114,7 @@ var Listen = &cli.Command{
 		signal.Notify(stop, os.Interrupt)
 
 		for _, iface := range interfaces {
-			go run.ListenOnInterface(iface, bpfFilter, saveTo, writeTo)
+			go run.ListenOnInterface(iface, bpfFilter, saveTo, writeTo, verbose, printHTTP)
 		}
 		<-stop
 		slog.Println(slog.INFO, "Stopped listening.")
