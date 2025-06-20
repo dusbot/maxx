@@ -34,6 +34,6 @@ func New() *cli.App {
 - Vulnerability assessment (CVE detection)
 - Credential auditing (Brute-force & dictionary attacks)
 - Automated exploit chaining (Beta)`
-	app.Commands = []*cli.Command{cmd.Crack, cmd.Listen}
+	app.Commands = []*cli.Command{cmd.Crack}
 	return app
 }
