@@ -42,21 +42,26 @@ type (
 		Proof       string
 	}
 
+	Ping struct {
+		Alive bool
+        
+	}
+
 	Result struct {
+		Ping
 		Target   string
-		Alive    bool
 		Port     int
 		Protocol string
 		User     string
 		Pass     string
 
-		Service, ProductName, Version, OS string
-		Extra                             string
-		CPEs, CVEs                        []string
-		Domain                            string
-		Digest                            string
-		Response                          string
-		Vulns                             []Vuln
+		Service, ProductName, DeviceName, Version, OS string
+		Extra                                         string
+		CPEs, CVEs                                    []string
+		Domain                                        string
+		Digest                                        string
+		Response                                      string
+		Vulns                                         []Vuln
 		// Additional fields for HTTP services
 		Title string
 	}

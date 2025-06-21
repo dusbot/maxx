@@ -118,6 +118,8 @@ github.com/huin/asn1ber v0.0.0-20120622192748-af09f62e6358 h1:hVXNJ57IHkOA8FBq80
 github.com/huin/asn1ber v0.0.0-20120622192748-af09f62e6358/go.mod h1:qBE210J2T9uLXRB3GNc73SvZACDEFAmDCOlDkV47zbY=
 github.com/icodeface/tls v0.0.0-20230910023335-34df9250cd12 h1:uSJXMFVNfN2hyXDLM19op2fNiCN/nL8xgdmNXgs5738=
 github.com/icodeface/tls v0.0.0-20230910023335-34df9250cd12/go.mod h1:VJNHW2GxCtQP/IQtXykBIPBV8maPJ/dHWirVTwm9GwY=
+github.com/j-keck/arping v1.0.3 h1:aeVk5WnsK6xPaRsFt5wV6W2x5l/n5XBNp0MMr/FEv2k=
+github.com/j-keck/arping v1.0.3/go.mod h1:aJbELhR92bSk7tp79AWM/ftfc90EfEi2bQJrbBFOsPw=
 github.com/jcmturner/aescts/v2 v2.0.0 h1:9YKLH6ey7H4eDBXW8khjYslgyqG2xZikXP0EQFKrle8=
 github.com/jcmturner/aescts/v2 v2.0.0/go.mod h1:AiaICIRyfYg35RUkr8yESTqvSy7csK90qZ5xfvvsoNs=
 github.com/jcmturner/dnsutils/v2 v2.0.0 h1:lltnkeZGL0wILNvrNiVCR6Ro5PGU/SeBvVO/8c/iPbo=
