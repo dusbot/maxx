@@ -43,8 +43,12 @@ type (
 	}
 
 	Ping struct {
-		Alive bool
-        
+		Target string
+		Alive  bool
+
+		Sent     int
+		Received int
+		LossRate float64
 	}
 
 	Result struct {
