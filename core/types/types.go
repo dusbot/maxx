@@ -26,7 +26,8 @@ type (
 
 		Crawl, Dirsearch bool // used for web application scanning only
 
-		Proxies []string
+		Proxies    []string
+		OutputJson string
 	}
 
 	Progress struct {
@@ -52,6 +53,8 @@ type (
 		Seq  int
 		Addr string
 		If   string
+
+		OSGuess string
 	}
 
 	Result struct {
@@ -68,6 +71,7 @@ type (
 		Domain                                        string
 		Digest                                        string
 		Response                                      string
+		WebFingers                                    []string
 		Vulns                                         []Vuln
 		// Additional fields for HTTP services
 		Title string
