@@ -46,9 +46,12 @@ type (
 		Target string
 		Alive  bool
 
-		Sent     int
-		Received int
-		LossRate float64
+		RTT  float64
+		Size int
+		TTL  int
+		Seq  int
+		Addr string
+		If   string
 	}
 
 	Result struct {

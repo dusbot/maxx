@@ -11,7 +11,6 @@ import (
 	"github.com/dusbot/maxx/core/types"
 	"github.com/dusbot/maxx/libs/ping"
 	"github.com/dusbot/maxx/libs/slog"
-	"github.com/dusbot/maxx/libs/utils"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -84,11 +83,7 @@ func (m *maxxScanner) Run() error {
 			wg.Add(1)
 			m.pool.Submit(func() {
 				defer wg.Done()
-				shouldReturn := m.handlePing(target)
-				if shouldReturn {
-					return
-				}
-				slog.Printf(slog.WARN, "Target %s is alive", target)
+				m.handlePing(target)
 			})
 		}
 	}
@@ -96,33 +91,45 @@ func (m *maxxScanner) Run() error {
 	return nil
 }
 
-func (m *maxxScanner) handlePing(target string) bool {
-	ipv4, err0 := utils.IsValidIP(target)
-	if err0 != nil {
-		if m.onVerbose != nil {
-			m.onVerbose("Skip invalid ip:" + target)
-		}
-		return true
-	}
-	pingStats, err1 := ping.Ping(target, ping.PingOptions{
-		Count:   1,
-		Timeout: time.Duration(m.task.Timeout),
-		IsIPv6:  !ipv4,
-	})
+func (m *maxxScanner) handlePing(target string) {
 	result := &types.Result{
 		Ping: types.Ping{
-			Target:   target,
-			Sent:     pingStats.Sent,
-			Received: pingStats.Received,
-			LossRate: pingStats.LossRate,
+			Target: target,
 		},
 	}
-	if err1 != nil {
+	defer func() {
 		m.publishResult(result)
-		slog.Printf(slog.WARN, "Target %s is offline", target)
-		return true
+	}()
+	pinger, err := ping.New(target)
+	if err != nil {
+		slog.Printf(slog.WARN, "Target %s is dead", target)
+		return
 	}
-	return false
+	pinger.SetCount(1)
+	pinger.SetTimeout("3s")
+	pingResp, err := pinger.Run()
+	if err != nil {
+		slog.Printf(slog.WARN, "Target %s is dead", target)
+		return
+	}
+	for r := range pingResp {
+		alive := r.Err == nil
+		if alive {
+			slog.Printf(slog.WARN, "Target %s is alive", target)
+		} else {
+			slog.Printf(slog.WARN, "Target %s is dead", target)
+		}
+		result.Ping = types.Ping{
+			Target: target,
+			Alive:  r.Err == nil,
+			RTT:    r.RTT,
+			Size:   r.Size,
+			TTL:    r.TTL,
+			Seq:    r.Seq,
+			Addr:   r.Addr,
+			If:     r.If,
+		}
+	}
 }
 
 func (m *maxxScanner) publishResult(result *types.Result) {

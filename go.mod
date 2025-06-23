@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/C-Sto/goWMIExec v0.0.1-deva
 	github.com/DataDog/mmh3 v0.0.0-20210722141835-012dc69a9e49
+	github.com/XinRoom/iprange v1.1.6
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/chromedp/cdproto v0.0.0-20250530212709-4dcc110a7b92
 	github.com/denisenkom/go-mssqldb v0.12.3
@@ -28,6 +29,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/masterzen/winrm v0.0.0-20240702205601-3fad6e106085
+	github.com/mehrdadrad/ping v0.2.5
 	github.com/minio/minio-go/v7 v7.0.92
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/olekukonko/tablewriter v1.0.7
