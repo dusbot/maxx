@@ -18,6 +18,7 @@ import (
 	"github.com/dusbot/maxx/libs/gonmap"
 	"github.com/dusbot/maxx/libs/ping"
 	"github.com/dusbot/maxx/libs/slog"
+	"github.com/dusbot/maxx/libs/stdio"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -48,9 +49,9 @@ func NewMaxx(task *types.Task) *maxxScanner {
 	pool, _ := ants.NewPool(task.Thread)
 	return &maxxScanner{
 		task:             task,
-		progressPipe:     make(chan *types.Progress, 1<<8),
-		resultPipe:       make(chan *types.Result, 1<<8),
-		outputResultPipe: make(chan *types.Result, 1<<8),
+		progressPipe:     make(chan *types.Progress, 1<<10),
+		resultPipe:       make(chan *types.Result, 1<<10),
+		outputResultPipe: make(chan *types.Result, 1<<10),
 		pool:             pool,
 	}
 }
@@ -70,6 +71,7 @@ func (m *maxxScanner) Run() error {
 	start := time.Now()
 	deferFunc := func() {
 		slog.Printf(slog.INFO, "Total cost:%s", time.Since(start).String())
+		stdio.CountdownWithBlink(time.Second*3, time.Millisecond*500)
 		m.autoClose()
 	}
 	defer deferFunc()
@@ -122,52 +124,57 @@ func (m *maxxScanner) Run() error {
 			wg.Add(1)
 			m.pool.Submit(func() {
 				defer wg.Done()
-				var result = &types.Result{
-					Target: target,
-				}
+				var pingResult *types.Ping
 				if m.task.SkipPing {
-					result.Alive = true // All hosts are assumed to be alive.
+					pingResult.Alive = true // All hosts are assumed to be alive.
 				} else {
-					result = m.handlePing(target)
+					pingResult = m.handlePing(target)
 				}
-				if result.Alive {
+				if pingResult.Alive {
 					for _, port := range m.task.Ports {
+						port_ := port
 						select {
 						case <-ctx.Done():
 							return
 						default:
 							wg.Add(1)
 							m.pool.Submit(func() {
-								defer wg.Done()
-								portResult := m.handlePortScan(target, port)
-								result.Alive = true
+								result_ := &types.Result{
+									Ping:   *pingResult,
+									Target: target,
+								}
+								result_.Port = port_
 								defer func() {
-									m.publishResult(result)
+									m.publishResult(result_, true)
+									wg.Done()
 								}()
+								portResult := m.handlePortScan(target, port_)
+								result_.Alive = true
 								if portResult == nil {
 									return
 								}
 								// Service, ProductName, DeviceName, Version, OS
 								if portResult.nmapResult != nil {
+									result_.PortOpen = true
 									if portResult.nmapResult.FingerPrint != nil {
-										result.Response = portResult.nmapResult.Raw
+										result_.Response = portResult.nmapResult.Raw
 										nmapFinger := portResult.nmapResult.FingerPrint
-										result.Service = nmapFinger.Service
-										result.ProductName = nmapFinger.ProductName
-										result.Protocol = "tcp"
-										result.DeviceName = nmapFinger.DeviceType
-										result.Version = nmapFinger.Version
+										result_.Service = nmapFinger.Service
+										result_.ProductName = nmapFinger.ProductName
+										result_.Protocol = "tcp"
+										result_.DeviceName = nmapFinger.DeviceType
+										result_.Version = nmapFinger.Version
 										if nmapFinger.OperatingSystem != "" {
-											result.OS = nmapFinger.OperatingSystem
+											result_.OS = nmapFinger.OperatingSystem
 										}
-										result.CPEs = append(result.CPEs, nmapFinger.CPE)
+										result_.CPEs = append(result_.CPEs, nmapFinger.CPE)
 									}
 								}
 								if portResult.fingerResult != nil {
 									for _, framework := range portResult.fingerResult.List() {
-										result.WebFingers = append(result.WebFingers, framework.Name)
+										result_.WebFingers = append(result_.WebFingers, framework.Name)
 										if framework.CPE() != "" {
-											result.CPEs = []string{framework.CPE()}
+											result_.CPEs = []string{framework.CPE()}
 										}
 									}
 								}
@@ -183,9 +190,9 @@ func (m *maxxScanner) Run() error {
 }
 
 // todo: TCP Ping and UDP Ping
-func (m *maxxScanner) handlePing(target string) (result *types.Result) {
+func (m *maxxScanner) handlePing(target string) (pingResult *types.Ping) {
 	verbose := m.task.Verbose
-	result = &types.Result{
+	result := &types.Result{
 		Target: target,
 		Ping: types.Ping{
 			Target: target,
@@ -193,7 +200,7 @@ func (m *maxxScanner) handlePing(target string) (result *types.Result) {
 	}
 	defer func() {
 		if !result.Alive {
-			m.publishResult(result)
+			m.publishResult(result, false)
 		}
 	}()
 	pinger, err := ping.New(target)
@@ -221,7 +228,7 @@ func (m *maxxScanner) handlePing(target string) (result *types.Result) {
 				fmt.Printf("%s dead\n", target)
 			}
 		}
-		result.Ping = types.Ping{
+		pingResult = &types.Ping{
 			Target:  target,
 			Alive:   r.Err == nil,
 			RTT:     r.RTT,
@@ -286,36 +293,50 @@ func truncate(s string, max int) string {
 	return s
 }
 
-func (m *maxxScanner) publishResult(result *types.Result) {
+func (m *maxxScanner) publishResult(result *types.Result, sync bool) {
+	if m.onResult != nil {
+		m.onResult(result)
+	}
 	if m.resultPipe != nil {
 		if !m.resultPipeClosed.Load() {
-			go func() {
+			if sync {
 				m.resultPipe <- result
-			}()
+			} else {
+				go func() {
+					if !m.resultPipeClosed.Load() {
+						m.resultPipe <- result
+					}
+				}()
+			}
 		}
 	}
 	if m.outputResultPipe != nil {
 		if !m.outputPipeClosed.Load() {
-			go func() {
-				m.resultPipe <- result
-			}()
+			if sync {
+				m.outputResultPipe <- result
+			} else {
+				go func() {
+					if !m.outputPipeClosed.Load() {
+						m.outputResultPipe <- result
+					}
+				}()
+			}
 		}
-	}
-	if m.onResult != nil {
-		m.onResult(result)
 	}
 }
 
 func (m *maxxScanner) publishProgress(progress *types.Progress) {
+	if m.onProgress != nil {
+		m.onProgress(progress)
+	}
 	if m.progressPipe != nil {
 		if !m.progresssPipeClosed.Load() {
 			go func() {
-				m.progressPipe <- progress
+				if !m.progresssPipeClosed.Load() {
+					m.progressPipe <- progress
+				}
 			}()
 		}
-	}
-	if m.onProgress != nil {
-		m.onProgress(progress)
 	}
 }
 
@@ -327,16 +348,16 @@ func (m *maxxScanner) publishVerbose(msg string) {
 
 func (m *maxxScanner) autoClose() {
 	if m.progressPipe != nil && !m.progresssPipeClosed.Load() {
-		close(m.progressPipe)
 		m.progresssPipeClosed.Store(true)
+		close(m.progressPipe)
 	}
 	if m.resultPipe != nil && !m.resultPipeClosed.Load() {
-		close(m.resultPipe)
 		m.resultPipeClosed.Store(true)
+		close(m.resultPipe)
 	}
-	if m.outputResultPipe != nil {
-		close(m.outputResultPipe)
+	if m.outputResultPipe != nil && !m.outputPipeClosed.Load() {
 		m.outputPipeClosed.Store(true)
+		close(m.outputResultPipe)
 	}
 	if m.pool != nil {
 		m.pool.Release()
