@@ -50,8 +50,8 @@ func NewMaxx(task *types.Task) *maxxScanner {
 	return &maxxScanner{
 		task:             task,
 		progressPipe:     make(chan *types.Progress, 1<<10),
-		resultPipe:       make(chan *types.Result, 1<<10),
-		outputResultPipe: make(chan *types.Result, 1<<10),
+		resultPipe:       make(chan *types.Result, 1<<16),
+		outputResultPipe: make(chan *types.Result, 1<<16),
 		pool:             pool,
 	}
 }
@@ -145,7 +145,7 @@ func (m *maxxScanner) Run() error {
 								}
 								result_.Port = port_
 								defer func() {
-									m.publishResult(result_, true)
+									m.publishResult(result_, false)
 									wg.Done()
 								}()
 								portResult := m.handlePortScan(target, port_)
