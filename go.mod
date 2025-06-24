@@ -23,7 +23,6 @@ require (
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/huin/asn1ber v0.0.0-20120622192748-af09f62e6358
 	github.com/icodeface/tls v0.0.0-20230910023335-34df9250cd12
-	github.com/j-keck/arping v1.0.3
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/knadh/go-pop3 v1.0.0
 	github.com/lib/pq v1.10.9
