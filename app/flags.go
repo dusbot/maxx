@@ -23,36 +23,39 @@ const CN_HELP = `
    1DK <3520124658@qq.com>
 
 子命令:
-   crack    爆破密码
-   help, h  显示命令列表或某命令的帮助信息
+   crack       	爆破密码
+   help, h     	显示命令列表或某命令的帮助信息
 
 全局命令：
---cn , -c        		显示中文帮助信息
---verbose , -V    		扫描明细
---max-runtime, -m 		最大运行时间，单位秒，默认为0，即不限制
---timeout, -to   		单个目标的超时时间，单位秒，默认为5
---interval, -i   		单个目标的间隔时间，单位毫秒，默认为50
---progress       		(每5秒)打印一次进度信息
---worker, -w     		并发线程数，默认为1024
---target, -t     		目标输入，例如：127.0.0.1,192.168.0.1/24,10.1.1.1-10
---target-file, -T 		目标文件，每行一个目标，单个目标格式参考--target(-t)
---port, -p       		端口输入，例如：22,80,8000-9000
---port-file, -P 		端口文件，每行一个端口
---no-ping, -np			启用禁Ping模式（视每个目标均存活）
---service-probe, -s		启用服务指纹探测
---os-probe, -o			启用操作系统探测
+   --cn, -c          	显示中文帮助信息
+   --verbose, -V     	扫描明细
+   --max-runtime, -m 	最大运行时间，单位秒，默认为0，即不限制，最小运行时间30
+   --timeout, -to    	单个目标的超时时间，单位秒，默认为5
+   --interval, -i    	单个目标的间隔时间，单位毫秒，默认为50
+   --close-wait, -cw 	结束(整个扫描)等待时间，用于释放资源
+   --progress        	(每5秒)打印一次进度信息
+   --worker, -w      	并发线程数，默认为1024
+   --target, -t      	目标输入，例如：127.0.0.1,192.168.0.1/24,10.1.1.1-10
+   --target-file, -T 	目标文件，每行一个目标，单个目标格式参考--target(-t)
+   --port, -p        	端口输入，例如：22,80,8000-9000
+   --port-file, -P   	端口文件，每行一个端口
+   --no-ping, -np    	启用禁Ping模式（视每个目标均存活）
+   --service-probe, -s	启用服务指纹探测
+   --os-probe, -o    	启用操作系统探测
+   --alive, -a       	只保留存活的目标
+   --output-json, -oj	保存结果为指定文件名的jsonline格式的文件
 `
 
 type Arg struct {
-	Verbose                       bool
-	MaxRuntime, Timeout, Interval int
-	Progress                      bool
-	Worker                        int
-	Targets                       []string
-	Ports                         []int
-	NoPing, ServiceProbe, OSProbe bool
-
-	OutputJson string
+	Verbose                                  bool
+	MaxRuntime, Timeout, Interval, CloseWait int
+	Progress                                 bool
+	Worker                                   int
+	Targets                                  []string
+	Ports                                    []int
+	NoPing, ServiceProbe, OSProbe            bool
+	AliveOnly                                bool
+	OutputJson                               string
 }
 
 var flags = []cli.Flag{
@@ -83,6 +86,12 @@ var flags = []cli.Flag{
 		Aliases: []string{"i"},
 		Value:   50,
 		Usage:   "scan interval in milliseconds",
+	},
+	&cli.IntFlag{
+		Name:    "close-wait",
+		Aliases: []string{"cw"},
+		Value:   5,
+		Usage:   "close wait for seconds",
 	},
 	&cli.BoolFlag{
 		Name:  "progress",
@@ -130,9 +139,14 @@ var flags = []cli.Flag{
 		Usage:   "Enable Operating system probe",
 	},
 
+	&cli.BoolFlag{
+		Name:    "alive",
+		Aliases: []string{"a"},
+		Usage:   "Only keep the targets that are alive",
+	},
 	&cli.StringFlag{
 		Name:    "output-json",
-		Aliases: []string{"oj", "oJ"},
+		Aliases: []string{"oj"},
 		Usage:   "Output the scan result in json format to the given filename",
 	},
 }

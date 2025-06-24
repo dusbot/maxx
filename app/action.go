@@ -23,6 +23,7 @@ func action(ctx *cli.Context) error {
 		MaxTime:      arg.MaxRuntime,
 		Timeout:      arg.Timeout,
 		Interval:     arg.Interval,
+		CloseWait:    arg.CloseWait,
 		Progress:     arg.Progress,
 		Thread:       arg.Worker,
 		Targets:      arg.Targets,
@@ -36,6 +37,7 @@ func action(ctx *cli.Context) error {
 		Crawl:        false,
 		Dirsearch:    false,
 		Proxies:      []string{},
+		AliveOnly:    arg.AliveOnly,
 		OutputJson:   arg.OutputJson,
 	}).Run()
 }
@@ -92,10 +94,12 @@ func parseFlags(ctx *cli.Context) (arg Arg, ok bool) {
 		arg.Timeout = 5
 	}
 	arg.Interval = ctx.Int("interval")
+	arg.CloseWait = ctx.Int("close-wait")
 	arg.Progress = ctx.Bool("progress")
 	arg.NoPing = ctx.Bool("no-ping")
 	arg.ServiceProbe = ctx.Bool("service-probe")
 	arg.OSProbe = ctx.Bool("os-probe")
+	arg.AliveOnly = ctx.Bool("alive")
 	arg.OutputJson = ctx.String("output-json")
 	return
 }

@@ -12,13 +12,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/chainreactors/fingers/common"
 	"github.com/dusbot/maxx/core/types"
-	fingers_ "github.com/dusbot/maxx/libs/fingers"
+	"github.com/dusbot/maxx/libs/finger"
 	"github.com/dusbot/maxx/libs/gonmap"
 	"github.com/dusbot/maxx/libs/ping"
 	"github.com/dusbot/maxx/libs/slog"
 	"github.com/dusbot/maxx/libs/stdio"
+	"github.com/dusbot/maxx/libs/uhttp"
+	"github.com/dusbot/maxx/libs/utils"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -33,10 +34,10 @@ type maxxScanner struct {
 	outputResultPipe                                        chan *types.Result
 	progresssPipeClosed, resultPipeClosed, outputPipeClosed atomic.Bool
 	pool                                                    *ants.Pool
-
-	onProgress func(*types.Progress)
-	onResult   func(*types.Result)
-	onVerbose  func(string)
+	cancel                                                  context.CancelFunc
+	onProgress                                              func(*types.Progress)
+	onResult                                                func(*types.Result)
+	onVerbose                                               func(string)
 }
 
 func NewMaxx(task *types.Task) *maxxScanner {
@@ -50,8 +51,8 @@ func NewMaxx(task *types.Task) *maxxScanner {
 	return &maxxScanner{
 		task:             task,
 		progressPipe:     make(chan *types.Progress, 1<<10),
-		resultPipe:       make(chan *types.Result, 1<<16),
-		outputResultPipe: make(chan *types.Result, 1<<16),
+		resultPipe:       make(chan *types.Result, 1<<10),
+		outputResultPipe: make(chan *types.Result, 1<<10),
 		pool:             pool,
 	}
 }
@@ -69,15 +70,16 @@ func (m *maxxScanner) OnVerbose(f func(string)) {
 func (m *maxxScanner) Run() error {
 	jsonFilename := m.task.OutputJson
 	start := time.Now()
-	deferFunc := func() {
+	closeFunc := func() {
 		slog.Printf(slog.INFO, "Total cost:%s", time.Since(start).String())
-		stdio.CountdownWithBlink(time.Second*3, time.Millisecond*500)
+		if m.task.CloseWait > 0 {
+			stdio.CountdownWithBlink(time.Second*time.Duration(m.task.CloseWait), time.Millisecond*500)
+		}
 		m.autoClose()
 	}
-	defer deferFunc()
+	defer closeFunc()
 	var (
-		ctx    context.Context
-		cancel context.CancelFunc
+		ctx context.Context
 	)
 	if m.task.Timeout == 0 {
 		m.task.Timeout = 5
@@ -86,11 +88,10 @@ func (m *maxxScanner) Run() error {
 		if m.task.MaxTime < 10 {
 			m.task.MaxTime = 10
 		}
-		ctx, cancel = context.WithTimeout(context.Background(), time.Duration(m.task.MaxTime)*time.Second)
+		ctx, m.cancel = context.WithTimeout(context.Background(), time.Duration(m.task.MaxTime)*time.Second)
 	} else {
-		ctx, cancel = context.WithCancel(context.Background())
+		ctx, m.cancel = context.WithCancel(context.Background())
 	}
-	defer cancel()
 
 	if m.task == nil {
 		m.publishVerbose("task is nil")
@@ -124,10 +125,13 @@ func (m *maxxScanner) Run() error {
 			wg.Add(1)
 			m.pool.Submit(func() {
 				defer wg.Done()
-				var pingResult *types.Ping
+				var pingResult types.Ping
 				if m.task.SkipPing {
 					pingResult.Alive = true // All hosts are assumed to be alive.
 				} else {
+					//todo: To prevent overwhelming target hosts with concurrent connections,
+					// 	perform an ICMP ping sweep to identify active hosts first,
+					// 	then conduct a full port scan using randomized port sequencing on responsive hosts only.​
 					pingResult = m.handlePing(target)
 				}
 				if pingResult.Alive {
@@ -140,12 +144,14 @@ func (m *maxxScanner) Run() error {
 							wg.Add(1)
 							m.pool.Submit(func() {
 								result_ := &types.Result{
-									Ping:   *pingResult,
+									Ping:   pingResult,
 									Target: target,
 								}
 								result_.Port = port_
 								defer func() {
-									m.publishResult(result_, false)
+									if result_.PortOpen {
+										m.publishResult(result_, false)
+									}
 									wg.Done()
 								}()
 								portResult := m.handlePortScan(target, port_)
@@ -153,7 +159,6 @@ func (m *maxxScanner) Run() error {
 								if portResult == nil {
 									return
 								}
-								// Service, ProductName, DeviceName, Version, OS
 								if portResult.nmapResult != nil {
 									result_.PortOpen = true
 									if portResult.nmapResult.FingerPrint != nil {
@@ -170,14 +175,10 @@ func (m *maxxScanner) Run() error {
 										result_.CPEs = append(result_.CPEs, nmapFinger.CPE)
 									}
 								}
-								if portResult.fingerResult != nil {
-									for _, framework := range portResult.fingerResult.List() {
-										result_.WebFingers = append(result_.WebFingers, framework.Name)
-										if framework.CPE() != "" {
-											result_.CPEs = []string{framework.CPE()}
-										}
-									}
+								if len(portResult.fingerResult) > 0 {
+									result_.WebFingers = append(result_.WebFingers, portResult.fingerResult...)
 								}
+								result_.CPEs = utils.RemoveAnyDuplicate(result_.CPEs)
 							})
 						}
 					}
@@ -190,16 +191,14 @@ func (m *maxxScanner) Run() error {
 }
 
 // todo: TCP Ping and UDP Ping
-func (m *maxxScanner) handlePing(target string) (pingResult *types.Ping) {
+func (m *maxxScanner) handlePing(target string) (pingResult types.Ping) {
 	verbose := m.task.Verbose
 	result := &types.Result{
 		Target: target,
-		Ping: types.Ping{
-			Target: target,
-		},
+		Ping:   types.Ping{},
 	}
 	defer func() {
-		if !result.Alive {
+		if !m.task.AliveOnly && !result.Alive {
 			m.publishResult(result, false)
 		}
 	}()
@@ -228,8 +227,7 @@ func (m *maxxScanner) handlePing(target string) (pingResult *types.Ping) {
 				fmt.Printf("%s dead\n", target)
 			}
 		}
-		pingResult = &types.Ping{
-			Target:  target,
+		pingResult = types.Ping{
 			Alive:   r.Err == nil,
 			RTT:     r.RTT,
 			Size:    r.Size,
@@ -245,7 +243,7 @@ func (m *maxxScanner) handlePing(target string) (pingResult *types.Ping) {
 
 type portScanResult struct {
 	nmapResult   *gonmap.Response
-	fingerResult *common.Frameworks
+	fingerResult []string
 }
 
 func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanResult) {
@@ -255,33 +253,55 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 	if status == gonmap.NotMatched || status == gonmap.Matched || status == gonmap.Open {
 		result = new(portScanResult)
 		result.nmapResult = resp
-		var service string
+		var service, cpe_, os string
 		if resp != nil {
 			if resp.FingerPrint != nil {
+				if m.task.OSProbe {
+					distro, _, _ := DetectOSFromBanner(resp.FingerPrint.Service, strings.ToLower(resp.Raw))
+					resp.FingerPrint.OperatingSystem = distro
+					os = distro
+				}
 				service = resp.FingerPrint.Service
+				cpe_ = resp.FingerPrint.CPE
+				if resp.FingerPrint.OperatingSystem != "" {
+					os = resp.FingerPrint.OperatingSystem
+				}
 			}
 			if m.task.ServiceProbe {
-				fingerResult, _ := fingers_.Engine.DetectContent([]byte(resp.Raw))
-				result.fingerResult = &fingerResult
+				header, body := uhttp.ParseHTTPHeaderAndBodyFromString(resp.Raw)
+				result.fingerResult = finger.Engine.Match(header, body)
+				// if len(fingerResult.CPE()) > 0 {
+				// 	for _, cpeCandidate := range fingerResult.CPE() {
+				// 		if cpe22Str := cpe.CPE23to22(cpeCandidate); cpe22Str != "" {
+				// 			cpe_ = strings.Join([]string{cpe22Str}, ",")
+				// 		}
+				// 	}
+				// }
 			}
 		}
 		const serviceWidth = 25
-		if result.fingerResult != nil {
-			fmt.Printf(
-				"\033[32m[+]\033[0m %-15s %-8s %-20s %s\n",
-				target,
-				fmt.Sprintf("%d/tcp", port),
-				truncate(service, serviceWidth),
-				strings.TrimSpace(result.fingerResult.String()),
-			)
-		} else {
-			fmt.Printf(
-				"\033[32m[+]\033[0m %-15s %-8s %-20s\n",
-				target,
-				fmt.Sprintf("%d/tcp", port),
-				truncate(service, serviceWidth),
-			)
+		var finalFinger string
+		var fingers_ []string
+		if os != "" {
+			fingers_ = append(fingers_, os)
 		}
+		if cpe_ != "" {
+			fingers_ = append(fingers_, cpe_)
+		}
+		if len(result.fingerResult) > 0 {
+			fingers_ = append(fingers_, result.fingerResult...)
+		}
+		if len(fingers_) > 0 {
+			fingers_ = utils.RemoveAnyDuplicate(fingers_)
+			finalFinger = strings.Join(fingers_, " | ")
+		}
+		fmt.Printf(
+			"\033[32m[+]\033[0m %-15s %-8s %-20s %s\n",
+			target,
+			fmt.Sprintf("%d/tcp", port),
+			truncate(service, serviceWidth),
+			strings.TrimSpace(finalFinger),
+		)
 	}
 	return
 }
@@ -347,15 +367,36 @@ func (m *maxxScanner) publishVerbose(msg string) {
 }
 
 func (m *maxxScanner) autoClose() {
+	if m.cancel != nil {
+		m.cancel()
+	}
 	if m.progressPipe != nil && !m.progresssPipeClosed.Load() {
+		go func() {
+			for range m.progressPipe {
+				// discard all the progress
+			}
+		}()
+		time.Sleep(time.Millisecond * 100)
 		m.progresssPipeClosed.Store(true)
 		close(m.progressPipe)
 	}
 	if m.resultPipe != nil && !m.resultPipeClosed.Load() {
+		go func() {
+			for range m.resultPipe {
+				// discard all the result
+			}
+		}()
+		time.Sleep(time.Millisecond * 100)
 		m.resultPipeClosed.Store(true)
 		close(m.resultPipe)
 	}
 	if m.outputResultPipe != nil && !m.outputPipeClosed.Load() {
+		go func() {
+			for range m.outputResultPipe {
+				// discard all the outputResult
+			}
+		}()
+		time.Sleep(time.Millisecond * 100)
 		m.outputPipeClosed.Store(true)
 		close(m.outputResultPipe)
 	}

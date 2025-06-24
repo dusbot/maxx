@@ -21,9 +21,9 @@ func CountdownWithBlink(duration time.Duration, blinkInterval time.Duration) {
 		seconds := int(remaining.Seconds()) + 1
 
 		if time.Now().Second()%2 == 0 {
-			fmt.Printf("\rLeft time: \033[7m%2ds\033[0m", seconds)
+			fmt.Printf("\rClose wait: \033[7m%2ds\033[0m", seconds)
 		} else {
-			fmt.Printf("\rLeft time: %2ds", seconds)
+			fmt.Printf("\rClose wait: %2ds", seconds)
 		}
 
 		time.Sleep(blinkInterval)

@@ -1,5 +1,7 @@
 package scan
 
+import "regexp"
+
 var DefaultPorts = []int{
 	7,     // Echo
 	19,    // Chargen
@@ -284,4 +286,110 @@ var DefaultPorts = []int{
 	57722, // Custom
 	60010, // Hadoop
 	64738, // Mumble
+}
+
+
+type BannerFingerprint struct {
+	Pattern   *regexp.Regexp
+	Distro    string
+	OSFamily  string
+	Service   string
+	Confidence int
+}
+
+var fingerprintDB = []BannerFingerprint{
+	{
+		Pattern:   regexp.MustCompile(`(?i)ubuntu|debian`),
+		Distro:    "Ubuntu",
+		OSFamily:  "Linux",
+		Service:   "ssh",
+		Confidence: 85,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)centos|red\s*hat|rhel|enterprise`),
+		Distro:    "CentOS/RHEL",
+		OSFamily:  "Linux",
+		Service:   "ssh",
+		Confidence: 80,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)debian`),
+		Distro:    "Debian",
+		OSFamily:  "Linux",
+		Service:   "ssh",
+		Confidence: 90,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)fedora`),
+		Distro:    "Fedora",
+		OSFamily:  "Linux",
+		Service:   "ssh",
+		Confidence: 75,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)alpine`),
+		Distro:    "Alpine",
+		OSFamily:  "Linux",
+		Service:   "ssh",
+		Confidence: 95,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`OpenSSH_([\d\.]+)`),
+		Distro:    "Unknown Linux",
+		OSFamily:  "Linux",
+		Service:   "ssh",
+		Confidence: 40,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)freebsd`),
+		Distro:    "FreeBSD",
+		OSFamily:  "BSD",
+		Service:   "ssh",
+		Confidence: 85,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`OpenSSH_[\d\.]+ macos`),
+		Distro:    "macOS",
+		OSFamily:  "Darwin",
+		Service:   "ssh",
+		Confidence: 90,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)windows`),
+		Distro:    "Windows",
+		OSFamily:  "Windows",
+		Service:   "telnet",
+		Confidence: 70,
+	},
+	
+	{
+		Pattern:   regexp.MustCompile(`(?i)cisco\s+ios|user\s+access\s+verification`),
+		Distro:    "Cisco IOS",
+		OSFamily:  "Network",
+		Service:   "telnet",
+		Confidence: 90,
+	},
+}
+
+//todo: Add more services like rdp、smb、iis and so on...
+func DetectOSFromBanner(service, banner string) (string, string, int) {
+	for _, fp := range fingerprintDB {
+		if fp.Service == service && fp.Pattern.MatchString(banner) {
+			return fp.Distro, fp.OSFamily, fp.Confidence
+		}
+	}
+	for _, fp := range fingerprintDB {
+		if fp.Pattern.MatchString(banner) {
+			return fp.Distro, fp.OSFamily, fp.Confidence - 20
+		}
+	}
+	return "", "", 0
 }
