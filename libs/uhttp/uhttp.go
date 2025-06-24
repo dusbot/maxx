@@ -1,12 +1,14 @@
 package uhttp
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -82,7 +84,7 @@ type Callback struct {
 	Signal     string
 	SignalChan chan bool
 	OnRequest  func(r *http.Request, signal string, signalChan chan bool)
-	Stop func()
+	Stop       func()
 }
 
 func StartSimpleHttpServer(host string, maxRuntime int, callbacks ...Callback) (accessURL string, stopFunc func(), err error) {
@@ -133,4 +135,35 @@ func getOutboundIP() (net.IP, error) {
 	}
 	defer conn.Close()
 	return conn.LocalAddr().(*net.UDPAddr).IP, nil
+}
+
+func ParseHTTPHeaderAndBodyFromString(resp string) (http.Header, string) {
+	header := http.Header{}
+	scanner := bufio.NewScanner(strings.NewReader(resp))
+	firstLine := true
+	bodyLines := []string{}
+	inBody := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if firstLine {
+			firstLine = false
+			continue
+		}
+		if inBody {
+			bodyLines = append(bodyLines, line)
+			continue
+		}
+		if line == "" {
+			inBody = true
+			continue
+		}
+		if idx := strings.Index(line, ":"); idx != -1 {
+			key := strings.TrimSpace(line[:idx])
+			value := strings.TrimSpace(line[idx+1:])
+			header.Add(key, value)
+		}
+	}
+	body := strings.Join(bodyLines, "\n")
+	return header, body
 }

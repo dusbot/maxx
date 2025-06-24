@@ -105,3 +105,14 @@ func inc(ip net.IP) {
 		}
 	}
 }
+
+func IsValidIP(ip string) (ipv4 bool, err error) {
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return false, fmt.Errorf("invalid IP address: %s", ip)
+	}
+	if parsed.To4() != nil {
+		return true, nil // IPv4
+	}
+	return false, nil // IPv6
+}

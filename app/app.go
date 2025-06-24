@@ -35,5 +35,7 @@ func New() *cli.App {
 - Credential auditing (Brute-force & dictionary attacks)
 - Automated exploit chaining (Beta)`
 	app.Commands = []*cli.Command{cmd.Crack}
+	app.Flags = flags
+	app.Action = action
 	return app
 }
