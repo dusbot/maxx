@@ -3,6 +3,7 @@ package finger
 import (
 	_ "embed"
 	"encoding/json"
+	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,15 +30,32 @@ func NewEngine() *engine {
 	}
 	e := new(engine)
 	_ = json.Unmarshal(data, &e.fingerprints)
+	e.wappEngine, _ = wappalyzer.New()
 	return e
 }
 
 type engine struct {
 	fingerprints []Fingerprint
+	wappEngine   *wappalyzer.Wappalyze
 }
 
 func (e *engine) Match(header http.Header, body string) []string {
-	return matchFingerprint(e.fingerprints, body, header)
+	fingers := matchFingerprint(e.fingerprints, body, header)
+	if e.wappEngine != nil {
+		wapFingers := e.wappEngine.Fingerprint(header, []byte(body))
+		for name, _ := range wapFingers {
+			fingers = append(fingers, name)
+		}
+	}
+	return fingers
+}
+
+func (e *engine) FingerprintLength() int {
+	count := len(e.fingerprints)
+	if e.wappEngine != nil {
+		count += len(e.wappEngine.GetFingerprints().Apps)
+	}
+	return count
 }
 
 func (e *engine) Add(fingerprint Fingerprint) error {

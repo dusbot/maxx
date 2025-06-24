@@ -4,10 +4,14 @@ import "github.com/urfave/cli/v2"
 
 const CN_HELP = `
 名称:
-   MaXx 扫描器 - 一体化的渗透安全工具，集侦察与利用于一身
+   MaXx 扫描器 - 一体化的渗透安全扫描工具，集侦察与利用于一身
 
 用法:
    MaXx Scanner [全局选项] 命令 [命令选项]
+  【示例】
+   爆破：maxx crack -t 127.0.0.1:22 -u admin -p 123456
+   爆破帮助：maxx crack -h
+   扫描：maxx -t 127.0.0.1,192.168.0.1/24 -p 22 -s -o
 
 版本:
    v1.0.1

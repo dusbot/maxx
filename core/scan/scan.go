@@ -85,8 +85,8 @@ func (m *maxxScanner) Run() error {
 		m.task.Timeout = 5
 	}
 	if m.task.MaxTime != 0 {
-		if m.task.MaxTime < 10 {
-			m.task.MaxTime = 10
+		if m.task.MaxTime < 30 {
+			m.task.MaxTime = 30
 		}
 		ctx, m.cancel = context.WithTimeout(context.Background(), time.Duration(m.task.MaxTime)*time.Second)
 	} else {
@@ -96,6 +96,9 @@ func (m *maxxScanner) Run() error {
 	if m.task == nil {
 		m.publishVerbose("task is nil")
 		return errors.New("task is nil")
+	}
+	if m.task.Verbose {
+		slog.Printf(slog.INFO, "Total Web fingerprint:%d", finger.Engine.FingerprintLength())
 	}
 	var wg sync.WaitGroup
 	if jsonFilename != "" {
@@ -244,6 +247,7 @@ func (m *maxxScanner) handlePing(target string) (pingResult types.Ping) {
 type portScanResult struct {
 	nmapResult   *gonmap.Response
 	fingerResult []string
+	Title        string
 }
 
 func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanResult) {
@@ -262,6 +266,19 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 					os = distro
 				}
 				service = resp.FingerPrint.Service
+				if strings.Contains(strings.ToLower(resp.Raw), "sent an http request to an https server") && service != "https" {
+					service = "https"
+					resp.FingerPrint.Service = "https"
+					resp.Raw, _ = uhttp.GET(uhttp.RequestInput{
+						RawUrl:             fmt.Sprintf("https://%s:%d", target, port),
+						Timeout:            3,
+						InsecureSkipVerify: true,
+					})
+					result.nmapResult = resp
+				}
+				if resp.FingerPrint.Service == "http" || resp.FingerPrint.Service == "https" {
+					result.Title = uhttp.ExtractTitle(resp.Raw)
+				}
 				cpe_ = resp.FingerPrint.CPE
 				if resp.FingerPrint.OperatingSystem != "" {
 					os = resp.FingerPrint.OperatingSystem
@@ -279,7 +296,6 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 				// }
 			}
 		}
-		const serviceWidth = 25
 		var finalFinger string
 		var fingers_ []string
 		if os != "" {
@@ -291,26 +307,24 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 		if len(result.fingerResult) > 0 {
 			fingers_ = append(fingers_, result.fingerResult...)
 		}
+		if result.Title != "" {
+			fingers_ = append(fingers_, "Title:"+result.Title)
+		}
 		if len(fingers_) > 0 {
 			fingers_ = utils.RemoveAnyDuplicate(fingers_)
 			finalFinger = strings.Join(fingers_, " | ")
 		}
+		finalUrl := fmt.Sprintf("tcp://%s:%d", target, port)
+		if service != "" {
+			finalUrl = fmt.Sprintf("%s://%s:%d", service, target, port)
+		}
 		fmt.Printf(
-			"\033[32m[+]\033[0m %-15s %-8s %-20s %s\n",
-			target,
-			fmt.Sprintf("%d/tcp", port),
-			truncate(service, serviceWidth),
+			"%-30s %-80s\n",
+			finalUrl,
 			strings.TrimSpace(finalFinger),
 		)
 	}
 	return
-}
-
-func truncate(s string, max int) string {
-	if len(s) > max {
-		return s[:max-3] + "..."
-	}
-	return s
 }
 
 func (m *maxxScanner) publishResult(result *types.Result, sync bool) {

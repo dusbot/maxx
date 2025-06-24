@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -166,4 +167,13 @@ func ParseHTTPHeaderAndBodyFromString(resp string) (http.Header, string) {
 	}
 	body := strings.Join(bodyLines, "\n")
 	return header, body
+}
+
+func ExtractTitle(html string) string {
+    re := regexp.MustCompile(`(?i)<title>(.*?)</title>`)
+    match := re.FindStringSubmatch(html)
+    if len(match) > 1 {
+        return strings.TrimSpace(match[1])
+    }
+    return ""
 }
