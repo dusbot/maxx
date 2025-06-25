@@ -1,0 +1,26 @@
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod tidy
+project_name: maxx
+builds:
+  - id: maxx-linux
+    ldflags:
+      - -s -w
+    binary: maxx
+    env:
+      - CGO_ENABLED=1
+    main: ./maxx.go
+    goos:
+      - linux
+    goarch:
+      - amd64
+      # - arm64
+      
+archives:
+- format: zip
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}_{{ .Arch }}'
+
+checksum:
+  name_template: "{{ .ProjectName }}-linux-checksums.txt"
