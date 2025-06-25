@@ -11,7 +11,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestArping(t *testing.T) {
-	mac, device, err := TryArping("10.1.30.50")
+	mac, device, err := TryArping("10.1.2.128")
 	if err != nil {
 		panic(err)
 	}

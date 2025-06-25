@@ -209,7 +209,7 @@ func (m *maxxScanner) handlePing(target string) (pingResult types.Ping) {
 	}()
 	var mac, device string
 	if m.task.OSProbe {
-		mac, device, _ = ping.TryArping(target)
+		// mac, device, _ = ping.TryArping(target)
 	}
 	pinger, err := ping.New(target)
 	if err != nil {
