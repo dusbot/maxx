@@ -98,7 +98,8 @@ func (m *maxxScanner) Run() error {
 		return errors.New("task is nil")
 	}
 	if m.task.Verbose {
-		slog.Printf(slog.INFO, "Total Web fingerprint:%d", finger.Engine.FingerprintLength())
+		slog.Printf(slog.INFO, "Total TCP fingerprint:[probe:%d|match:%d]", gonmap.ProbesCount, gonmap.MatchCount)
+		slog.Printf(slog.INFO, "Total Web fingerprint:[%d]", finger.Engine.FingerprintLength())
 	}
 	var wg sync.WaitGroup
 	if jsonFilename != "" {
@@ -262,8 +263,10 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 			if resp.FingerPrint != nil {
 				if m.task.OSProbe {
 					distro, _, _ := DetectOSFromBanner(resp.FingerPrint.Service, strings.ToLower(resp.Raw))
-					resp.FingerPrint.OperatingSystem = distro
-					os = distro
+					if distro != "" {
+						resp.FingerPrint.OperatingSystem = distro
+						os = distro
+					}
 				}
 				service = resp.FingerPrint.Service
 				if strings.Contains(strings.ToLower(resp.Raw), "sent an http request to an https server") && service != "https" {
