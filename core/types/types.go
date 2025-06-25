@@ -55,6 +55,8 @@ type (
 		If   string  `json:"if,omitempty"`
 
 		OSGuess string `json:"os_guess,omitempty"`
+		MacAddr string `json:"mac_addr,omitempty"`
+		Device  string `json:"device,omitempty"`
 	}
 
 	Result struct {

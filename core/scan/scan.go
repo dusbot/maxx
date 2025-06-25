@@ -207,6 +207,10 @@ func (m *maxxScanner) handlePing(target string) (pingResult types.Ping) {
 			m.publishResult(result, false)
 		}
 	}()
+	var mac, device string
+	if m.task.OSProbe {
+		mac, device, _ = ping.TryArping(target)
+	}
 	pinger, err := ping.New(target)
 	if err != nil {
 		if verbose {
@@ -241,6 +245,8 @@ func (m *maxxScanner) handlePing(target string) (pingResult types.Ping) {
 			Addr:    r.Addr,
 			If:      r.If,
 			OSGuess: getOSByTTL(r.TTL),
+			MacAddr: mac,
+			Device:  device,
 		}
 	}
 	return
