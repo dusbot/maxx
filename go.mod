@@ -19,6 +19,7 @@ require (
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
+	github.com/google/gopacket v1.1.19
 	github.com/gookit/color v1.5.4
 	github.com/gosnmp/gosnmp v1.41.0
 	github.com/hirochachacha/go-smb2 v1.1.0
