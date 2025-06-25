@@ -10,12 +10,15 @@
 
 MaXx is a modular network security scanner combining:
 
--   Port scanning with service fingerprinting (Coming soon)
+-   Port scanning with service fingerprinting (√)
+-   Credential auditing (Brute-force & dictionary attacks) (√)
 -   Vulnerability assessment (CVE detection) (Coming soon)
--   Credential auditing (Brute-force & dictionary attacks) (Implemented in the initial release)
 -   Automated exploit chaining (Beta:Coming soon)
 
 > If you like this tool, please star it~
+
+### About Port Scanning
+![](static/images/scan_help.png)
 
 ### About Service Cracking
 
