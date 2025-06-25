@@ -72,13 +72,15 @@ type (
 		Version     string   `json:"version,omitempty"`
 		OS          string   `json:"os,omitempty"`
 		Extra       string   `json:"extra,omitempty"`
-		CPEs, CVEs  []string `json:"cpes,omitempty"`
+		CPEs        []string `json:"cpes,omitempty"`
+		CVEs        []string `json:cves,omitempty`
 		Domain      string   `json:"domain,omitempty"`
 		Digest      string   `json:"digest,omitempty"`
 		Response    string   `json:"response,omitempty"`
 		WebFingers  []string `json:"web_fingers,omitempty"`
 		Vulns       []Vuln   `json:"vulns,omitempty"`
 		// Additional fields for HTTP services
-		Title string `json:"title,omitempty"`
+		StatusCode int    `json:"status_code,omitempty"`
+		Title      string `json:"title,omitempty"`
 	}
 )

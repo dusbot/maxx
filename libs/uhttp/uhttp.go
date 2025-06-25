@@ -29,7 +29,7 @@ type RequestInput struct {
 	Param              string
 }
 
-func GET(input RequestInput) (html string, err error) {
+func GET(input RequestInput) (statusCode int, header http.Header, html string, err error) {
 	client := resty.New()
 	for _, cookie := range input.Cookies {
 		client.SetCookie(&http.Cookie{Name: cookie.Name, Value: cookie.Value})
@@ -56,11 +56,13 @@ func GET(input RequestInput) (html string, err error) {
 		return
 	}
 	defer res.Body.Close()
+	statusCode = res.StatusCode()
+	header = res.Header()
 	html = res.String()
 	return
 }
 
-func POST(input RequestInput) (html string, err error) {
+func POST(input RequestInput) (statusCode int, header http.Header, html string, err error) {
 	client := resty.New()
 	for _, cookie := range input.Cookies {
 		client.SetCookie(&http.Cookie{Name: cookie.Name, Value: cookie.Value})
@@ -77,7 +79,9 @@ func POST(input RequestInput) (html string, err error) {
 		return
 	}
 	defer res.Body.Close()
+	statusCode = res.StatusCode()
 	html = res.String()
+	header = res.Header()
 	return
 }
 
@@ -170,10 +174,10 @@ func ParseHTTPHeaderAndBodyFromString(resp string) (http.Header, string) {
 }
 
 func ExtractTitle(html string) string {
-    re := regexp.MustCompile(`(?i)<title>(.*?)</title>`)
-    match := re.FindStringSubmatch(html)
-    if len(match) > 1 {
-        return strings.TrimSpace(match[1])
-    }
-    return ""
+	re := regexp.MustCompile(`(?i)<title>(.*?)</title>`)
+	match := re.FindStringSubmatch(html)
+	if len(match) > 1 {
+		return strings.TrimSpace(match[1])
+	}
+	return ""
 }

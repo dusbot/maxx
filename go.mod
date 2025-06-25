@@ -9,6 +9,7 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/chromedp/cdproto v0.0.0-20250621212827-3f1355e655b9
 	github.com/denisenkom/go-mssqldb v0.12.3
+	github.com/dusbot/cpe2cve v0.0.0-20250625034158-4c1efc271212
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/emersion/go-imap/v2 v2.0.0-beta.2
 	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43

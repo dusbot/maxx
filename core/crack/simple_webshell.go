@@ -43,7 +43,7 @@ func (o *SimpleWebshellCrack) Crack() (succ bool, err error) {
 				respErr error
 			)
 			if method == "GET" {
-				html, respErr = uhttp.GET(uhttp.RequestInput{
+				_, _, html, respErr = uhttp.GET(uhttp.RequestInput{
 					RawUrl:             o.Target,
 					Proxy:              o.Proxy,
 					Timeout:            time.Duration(timeout) * time.Second,
@@ -51,7 +51,7 @@ func (o *SimpleWebshellCrack) Crack() (succ bool, err error) {
 					Param:              finalPayload,
 				})
 			} else if method == "POST" {
-				html, respErr = uhttp.POST(uhttp.RequestInput{
+				_, _, html, respErr = uhttp.POST(uhttp.RequestInput{
 					RawUrl:             o.Target,
 					Proxy:              o.Proxy,
 					Timeout:            time.Duration(timeout) * time.Second,

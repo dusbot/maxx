@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"runtime"
 	"strings"
@@ -24,7 +25,7 @@ import (
 )
 
 type scanner interface {
-	Run(context.Context) error
+	Run() error
 }
 
 type maxxScanner struct {
@@ -248,6 +249,7 @@ func (m *maxxScanner) handlePing(target string) (pingResult types.Ping) {
 type portScanResult struct {
 	nmapResult   *gonmap.Response
 	fingerResult []string
+	StatusCode   int
 	Title        string
 }
 
@@ -260,6 +262,7 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 		result.nmapResult = resp
 		var service, cpe_, os string
 		if resp != nil {
+			var header_ http.Header
 			if resp.FingerPrint != nil {
 				if m.task.OSProbe {
 					distro, _, _ := DetectOSFromBanner(resp.FingerPrint.Service, strings.ToLower(resp.Raw))
@@ -269,18 +272,27 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 					}
 				}
 				service = resp.FingerPrint.Service
-				if strings.Contains(strings.ToLower(resp.Raw), "sent an http request to an https server") && service != "https" {
+				lowerRaw := strings.ToLower(resp.Raw)
+				if strings.Contains(lowerRaw, "sent an http request to an https server") ||
+					strings.Contains(lowerRaw, "http request was sent to https port") {
 					service = "https"
 					resp.FingerPrint.Service = "https"
-					resp.Raw, _ = uhttp.GET(uhttp.RequestInput{
+					result.StatusCode, header_, resp.Raw, _ = uhttp.GET(uhttp.RequestInput{
 						RawUrl:             fmt.Sprintf("https://%s:%d", target, port),
-						Timeout:            3,
+						Timeout:            time.Duration(m.task.Timeout) * time.Second,
 						InsecureSkipVerify: true,
 					})
 					result.nmapResult = resp
 				}
 				if resp.FingerPrint.Service == "http" || resp.FingerPrint.Service == "https" {
 					result.Title = uhttp.ExtractTitle(resp.Raw)
+					if result.StatusCode == 0 {
+						result.StatusCode, header_, resp.Raw, _ = uhttp.GET(uhttp.RequestInput{
+							RawUrl:             fmt.Sprintf("%s://%s:%d", resp.FingerPrint.Service, target, port),
+							Timeout:            time.Duration(m.task.Timeout) * time.Second,
+							InsecureSkipVerify: true,
+						})
+					}
 				}
 				cpe_ = resp.FingerPrint.CPE
 				if resp.FingerPrint.OperatingSystem != "" {
@@ -289,7 +301,10 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 			}
 			if m.task.ServiceProbe {
 				header, body := uhttp.ParseHTTPHeaderAndBodyFromString(resp.Raw)
-				result.fingerResult = finger.Engine.Match(header, body)
+				if len(header_) != 0 {
+					header = header_
+				}
+				result.fingerResult = utils.RemoveAnyDuplicate(finger.Engine.Match(header, body))
 				// if len(fingerResult.CPE()) > 0 {
 				// 	for _, cpeCandidate := range fingerResult.CPE() {
 				// 		if cpe22Str := cpe.CPE23to22(cpeCandidate); cpe22Str != "" {
@@ -320,6 +335,9 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 		finalUrl := fmt.Sprintf("tcp://%s:%d", target, port)
 		if service != "" {
 			finalUrl = fmt.Sprintf("%s://%s:%d", service, target, port)
+		}
+		if result.StatusCode != 0 {
+			finalFinger = fmt.Sprintf("[%d] %s", result.StatusCode, finalFinger)
 		}
 		fmt.Printf(
 			"%-30s %-80s\n",
