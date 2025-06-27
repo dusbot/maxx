@@ -26,7 +26,9 @@ MaXx 是一个模块化的网络安全扫描器，集成了以下功能：
 
 ### 漏洞评估（漏洞挖掘与验证）
 
-**建设中...**
+![](static/images/maxx_attack_help_cn.png)
+
+![](static/images/maxx_attack.png)
 
 ### 运行截图
 

@@ -27,8 +27,9 @@ MaXx is a modular network security scanner combining:
 For webshell brute-force details, refer to [docs/webshell](docs/webshell.md)
 
 ### About Vulnerability Scanning
+![](static/images/maxx_attack_help.png)
 
-**Comming soon**
+![](static/images/maxx_attack.png)
 
 ### Snapshot
 

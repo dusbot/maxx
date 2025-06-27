@@ -182,7 +182,9 @@ func (m *maxxScanner) Run() error {
 								}
 								if len(portResult.fingerResult) > 0 {
 									result_.WebFingers = append(result_.WebFingers, portResult.fingerResult...)
+									result_.WebFingers = utils.RemoveStrSliceDuplicate(result_.WebFingers)
 								}
+
 								result_.CPEs = utils.RemoveAnyDuplicate(result_.CPEs)
 							})
 						}
@@ -271,7 +273,7 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 			var header_ http.Header
 			if resp.FingerPrint != nil {
 				if m.task.OSProbe {
-					distro, _, _ := DetectOSFromBanner(resp.FingerPrint.Service, strings.ToLower(resp.Raw))
+					distro, _, _ := DetectOSFromBanner(port, resp.FingerPrint.Service, strings.ToLower(resp.Raw))
 					if distro != "" {
 						resp.FingerPrint.OperatingSystem = distro
 						os = distro
@@ -335,7 +337,7 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 			fingers_ = append(fingers_, "Title:"+result.Title)
 		}
 		if len(fingers_) > 0 {
-			fingers_ = utils.RemoveAnyDuplicate(fingers_)
+			fingers_ = utils.RemoveStrSliceDuplicate(fingers_)
 			finalFinger = strings.Join(fingers_, " | ")
 		}
 		finalUrl := fmt.Sprintf("tcp://%s:%d", target, port)
