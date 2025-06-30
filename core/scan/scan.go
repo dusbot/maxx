@@ -121,6 +121,29 @@ func (m *maxxScanner) Run() error {
 			}
 		}()
 	}
+	progressItem := new(progress)
+	progressItem.Total.Store(int64(len(m.task.Targets)) * int64(len(m.task.Ports)))
+	progressItem.Done.Store(0)
+	go func() {
+		for {
+			time.Sleep(time.Second * 5)
+			total := progressItem.Total.Load()
+			done := progressItem.Done.Load()
+			progressRate := float64(done) * 100 / float64(total)
+			if progressRate >= 100 {
+				progressRate = 99
+			}
+			m.publishProgress(&types.Progress{
+				Total:    progressItem.Total.Load(),
+				Done:     progressItem.Done.Load(),
+				Progress: progressRate,
+			})
+			if m.progresssPipeClosed.Load() {
+				// fmt.Println("the progress pipe closed")
+				return
+			}
+		}
+	}()
 	for _, t := range m.task.Targets {
 		target := t
 		select {
@@ -157,6 +180,7 @@ func (m *maxxScanner) Run() error {
 									if result_.PortOpen {
 										m.publishResult(result_, false)
 									}
+									progressItem.StepProgress(1)
 									wg.Done()
 								}()
 								portResult := m.handlePortScan(target, port_)
@@ -187,14 +211,27 @@ func (m *maxxScanner) Run() error {
 
 								result_.CPEs = utils.RemoveAnyDuplicate(result_.CPEs)
 							})
+							if m.task.Interval > 0 {
+								time.Sleep(time.Duration(m.task.Interval) * time.Millisecond)
+							}
 						}
 					}
+				} else {
+					progressItem.StepProgress(int64(len(m.task.Ports)))
 				}
 			})
 		}
 	}
 	wg.Wait()
 	return nil
+}
+
+type progress struct {
+	Total, Done atomic.Int64
+}
+
+func (p *progress) StepProgress(val int64) {
+	p.Done.Add(val)
 }
 
 // todo: TCP Ping and UDP Ping
@@ -413,6 +450,10 @@ func (m *maxxScanner) autoClose() {
 	if m.cancel != nil {
 		m.cancel()
 	}
+	m.publishProgress(&types.Progress{
+		Progress: 100,
+	})
+	time.Sleep(time.Second)
 	if m.progressPipe != nil && !m.progresssPipeClosed.Load() {
 		go func() {
 			for range m.progressPipe {

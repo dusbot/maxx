@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/XinRoom/iprange"
@@ -31,8 +32,8 @@ func TestPing(t *testing.T) {
 }
 
 func TestPortScan(t *testing.T) {
-	ports := utils.ParsePortRange("443")
-	ipSet, err := iprange.GenIpSet("10.1.1.121")
+	ports := utils.ParsePortRange("9000")
+	ipSet, err := iprange.GenIpSet("10.1.1.1/24")
 	if err != nil {
 		panic(err)
 	}
@@ -51,5 +52,8 @@ func TestPortScan(t *testing.T) {
 	// 		fmt.Printf("target[%s] TTL:%d OS:%s\n", r.Target, r.TTL, r.OSGuess)
 	// 	}
 	// })
+	maxx.OnProgress(func(p *types.Progress) {
+		fmt.Printf("progress: %f\n", p.Progress)
+	})
 	maxx.Run()
 }
