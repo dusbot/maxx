@@ -32,7 +32,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestPortScan(t *testing.T) {
-	ports := utils.ParsePortRange("9000")
+	ports := utils.ParsePortRange("8080")
 	ipSet, err := iprange.GenIpSet("10.1.1.1/24")
 	if err != nil {
 		panic(err)

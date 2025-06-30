@@ -188,6 +188,8 @@ func (m *maxxScanner) Run() error {
 								if portResult == nil {
 									return
 								}
+								result_.Title = portResult.Title
+								result_.StatusCode = portResult.StatusCode
 								if portResult.nmapResult != nil {
 									result_.PortOpen = true
 									if portResult.nmapResult.FingerPrint != nil {
