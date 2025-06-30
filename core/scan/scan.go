@@ -35,7 +35,7 @@ type maxxScanner struct {
 	outputResultPipe                                        chan *types.Result
 	progresssPipeClosed, resultPipeClosed, outputPipeClosed atomic.Bool
 	pool                                                    *ants.Pool
-	cancel                                                  context.CancelFunc
+	Cancel                                                  context.CancelFunc
 	onProgress                                              func(*types.Progress)
 	onResult                                                func(*types.Result)
 	onVerbose                                               func(string)
@@ -89,9 +89,9 @@ func (m *maxxScanner) Run() error {
 		if m.task.MaxTime < 30 {
 			m.task.MaxTime = 30
 		}
-		ctx, m.cancel = context.WithTimeout(context.Background(), time.Duration(m.task.MaxTime)*time.Second)
+		ctx, m.Cancel = context.WithTimeout(context.Background(), time.Duration(m.task.MaxTime)*time.Second)
 	} else {
-		ctx, m.cancel = context.WithCancel(context.Background())
+		ctx, m.Cancel = context.WithCancel(context.Background())
 	}
 
 	if m.task == nil {
@@ -449,8 +449,8 @@ func (m *maxxScanner) publishVerbose(msg string) {
 }
 
 func (m *maxxScanner) autoClose() {
-	if m.cancel != nil {
-		m.cancel()
+	if m.Cancel != nil {
+		m.Cancel()
 	}
 	m.publishProgress(&types.Progress{
 		Progress: 100,
