@@ -140,7 +140,7 @@ type Fingerprint struct {
 func matchFingerprint(fingerprints []Fingerprint, body string, header http.Header) (fingers []string) {
 	for _, fp := range fingerprints {
 		if fp.Method == "keyword" {
-			if matchesKeyword(fp.Location, fp.Keyword, body, header) {
+			if MatchesKeyword(fp.Location, fp.Keyword, body, header) {
 				fingers = append(fingers, fp.CMS)
 			}
 		}
@@ -148,7 +148,7 @@ func matchFingerprint(fingerprints []Fingerprint, body string, header http.Heade
 	return fingers
 }
 
-func matchesKeyword(location string, keywords []string, body string, header http.Header) bool {
+func MatchesKeyword(location string, keywords []string, body string, header http.Header) bool {
 	switch location {
 	case "title":
 		for _, keyword := range keywords {
