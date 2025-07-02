@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+const (
+	FileFolder = ".maxx"
+	FingerName = "finger.json"
+)
+
 //go:embed finger.json
 var fingerRaw []byte
 
@@ -17,7 +22,7 @@ var Engine = NewEngine()
 
 func NewEngine() *engine {
 	home, _ := os.UserHomeDir()
-	fingerPath := filepath.Join(home, ".maxx", "finger.json")
+	fingerPath := filepath.Join(home, FileFolder, FingerName)
 	var data []byte
 	if _, err := os.Stat(fingerPath); err == nil {
 		data, _ = os.ReadFile(fingerPath)
@@ -64,7 +69,7 @@ func (e *engine) Add(fingerprint Fingerprint) error {
 	if err != nil {
 		return err
 	}
-	fingerPath := filepath.Join(home, ".maxx", "finger.json")
+	fingerPath := filepath.Join(home, FileFolder, FingerName)
 	data, err := json.MarshalIndent(e.fingerprints, "", "  ")
 	if err != nil {
 		return err
