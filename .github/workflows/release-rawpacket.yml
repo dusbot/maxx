@@ -1,10 +1,10 @@
 name: Release maxx-rawpacket
 
-on:
-  push:
-    tags:
-      - v*
-  workflow_dispatch:
+# on:
+#   push:
+#     tags:
+#       - v*
+#   workflow_dispatch:
 
 jobs:
   build-mac:

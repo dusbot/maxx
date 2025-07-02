@@ -1,13 +1,13 @@
 name: release pure-go
 
-on:
-  push:
-    tags:
-      - '*'
-      - '!*dev*'
-      - '!*beta*'
-      - '!*alpha*'
-      - '!*-rc*'
+# on:
+#   push:
+#     tags:
+#       - '*'
+#       - '!*dev*'
+#       - '!*beta*'
+#       - '!*alpha*'
+#       - '!*-rc*'
 
 permissions:
   contents: write
