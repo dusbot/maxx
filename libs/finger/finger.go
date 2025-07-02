@@ -3,11 +3,13 @@ package finger
 import (
 	_ "embed"
 	"encoding/json"
-	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 )
 
 const (
@@ -61,6 +63,57 @@ func (e *engine) FingerprintLength() int {
 		count += len(e.wappEngine.GetFingerprints().Apps)
 	}
 	return count
+}
+
+type FingerStat struct {
+	Name  string
+	Count int
+}
+
+func (e *engine) FingerStats() []FingerStat {
+	cmsCount := make(map[string]int)
+	for _, fp := range e.fingerprints {
+		if fp.CMS == "" {
+			continue
+		}
+		cmsCount[fp.CMS]++
+	}
+	if e.wappEngine != nil {
+		for appName := range e.wappEngine.GetFingerprints().Apps {
+			if appName == "" {
+				continue
+			}
+			cmsCount[appName]++
+		}
+	}
+	var stats []FingerStat
+	for name, count := range cmsCount {
+		stats = append(stats, FingerStat{
+			Name:  name,
+			Count: count,
+		})
+	}
+	sort.Slice(stats, func(i, j int) bool {
+		return stats[i].Name < stats[j].Name
+	})
+	return stats
+}
+
+func (e *engine) FingerNameMap() map[string]bool {
+	fingerNameMap := make(map[string]bool)
+	for _, fp := range e.fingerprints {
+		if fp.CMS != "" {
+			fingerNameMap[fp.CMS] = true
+		}
+	}
+	if e.wappEngine != nil {
+		for appName := range e.wappEngine.GetFingerprints().Apps {
+			if appName != "" {
+				fingerNameMap[appName] = true
+			}
+		}
+	}
+	return fingerNameMap
 }
 
 func (e *engine) Add(fingerprint Fingerprint) error {
