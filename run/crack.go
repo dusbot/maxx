@@ -165,10 +165,9 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 					slog.Printf(slog.DATA, "Discovered No-auth Service[%s] target[%s]", service, target)
 				}
 				table := tablewriter.NewWriter(os.Stdout)
-				table.Header([]string{"Target", "Service(No-auth)"})
+				table.SetHeader([]string{"Target", "Service(No-auth)"})
 				table.Append([]string{target, service})
 				table.Render()
-				defer table.Close()
 				progressBar.Add(targetStep)
 				continue
 			} else {
@@ -231,10 +230,9 @@ func Crack(ctx context.Context, task *types.Task) (err error) {
 									}
 									consoleLock.Lock()
 									table := tablewriter.NewWriter(os.Stdout)
-									table.Header([]string{"Target", "Service", "Detail"})
+									table.SetHeader([]string{"Target", "Service", "Detail"})
 									table.Append([]string{target, service, fmt.Sprintf("%s:%s", user, pass)})
 									table.Render()
-									table.Close()
 									consoleLock.Unlock()
 								}
 							}

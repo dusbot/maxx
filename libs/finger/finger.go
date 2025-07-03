@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"github.com/dusbot/maxx/libs/common"
 
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 )
 
 const (
-	FileFolder = ".maxx"
 	FingerName = "finger.json"
 )
 
@@ -24,7 +24,7 @@ var Engine = NewEngine()
 
 func NewEngine() *engine {
 	home, _ := os.UserHomeDir()
-	fingerPath := filepath.Join(home, FileFolder, FingerName)
+	fingerPath := filepath.Join(home, common.FileFolder, FingerName)
 	var data []byte
 	if _, err := os.Stat(fingerPath); err == nil {
 		data, _ = os.ReadFile(fingerPath)

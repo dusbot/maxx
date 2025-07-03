@@ -16,8 +16,6 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/olekukonko/tablewriter/renderer"
-	"github.com/olekukonko/tablewriter/tw"
 	"github.com/urfave/cli/v2"
 )
 
@@ -225,25 +223,12 @@ func parseArgs(ctx *cli.Context) {
 }
 
 func listService() {
-	colorCfg := renderer.ColorizedConfig{
-		Header: renderer.Tint{
-			FG: renderer.Colors{color.FgYellow, color.Bold},
-		},
-		Column: renderer.Tint{
-			FG: renderer.Colors{color.FgCyan},
-			Columns: []renderer.Tint{
-				{FG: renderer.Colors{color.FgMagenta}},
-				{FG: renderer.Colors{color.FgGreen}},
-				{FG: renderer.Colors{color.FgHiYellow}},
-			},
-		},
-		Footer: renderer.Tint{
-			FG: renderer.Colors{color.FgYellow, color.Bold},
-		},
-		Border:    renderer.Tint{FG: renderer.Colors{color.FgBlack}},
-		Separator: renderer.Tint{FG: renderer.Colors{color.FgWhite}},
+	columnColor := color.New(color.FgCyan)
+	alternateColors := []*color.Color{
+		color.New(color.FgMagenta),
+		color.New(color.FgGreen),
+		color.New(color.FgHiYellow),
 	}
-
 	classOrder := []struct {
 		Key  string
 		Name string
@@ -257,7 +242,6 @@ func listService() {
 		{"file transfer", "File Transfer"},
 		{"mail service", "Mail Service"},
 	}
-
 	classMap := make(map[string][]string)
 	total := 0
 	for name, svc := range crack.CrackServiceMap {
@@ -265,42 +249,36 @@ func listService() {
 		classMap[class] = append(classMap[class], name)
 		total++
 	}
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Type", "Service", "Count"})
+	table.SetBorder(true)
+	table.SetRowLine(false)
+	table.SetAutoWrapText(true)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
 
-	table := tablewriter.NewTable(os.Stdout, tablewriter.WithRenderer(renderer.NewColorized(colorCfg)),
-		tablewriter.WithConfig(tablewriter.Config{
-			Row: tw.CellConfig{
-				Formatting: tw.CellFormatting{
-					AutoWrap: tw.WrapNormal,
-				},
-				Alignment:    tw.CellAlignment{Global: tw.AlignLeft},
-				ColMaxWidths: tw.CellWidth{Global: 50},
-			},
-			Footer: tw.CellConfig{
-				Alignment: tw.CellAlignment{Global: tw.AlignLeft},
-			},
-			MaxWidth: 0,
-			Header:   tw.CellConfig{},
-			Debug:    false,
-			Stream:   tw.StreamConfig{},
-			Behavior: tw.Behavior{},
-			Widths:   tw.CellWidth{},
-		}))
-	table.Header([]string{"Class", "Service", "Count"})
-
-	for _, c := range classOrder {
+	table.SetHeaderColor(
+		tablewriter.Colors{tablewriter.Bold, tablewriter.FgYellowColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.FgYellowColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.FgYellowColor},
+	)
+	for i, c := range classOrder {
 		services := classMap[c.Key]
 		if len(services) == 0 {
 			continue
 		}
+		rowColor := alternateColors[i%len(alternateColors)]
+		coloredClass := rowColor.Sprint(c.Name)
+		coloredServices := columnColor.Sprint(strings.Join(services, ", "))
+		coloredCount := columnColor.Sprint(fmt.Sprintf("%d", len(services)))
+
 		table.Append([]string{
-			c.Name,
-			strings.Join(services, ", "),
-			fmt.Sprintf("%d", len(services)),
+			coloredClass,
+			coloredServices,
+			coloredCount,
 		})
 	}
-	table.Footer("Total", "", fmt.Sprintf("%d", total))
+	table.SetFooter([]string{"", "Total", fmt.Sprintf("%d", total)})
 	table.Render()
-	table.Close()
 }
 
 func ReadDict(dict string) (dictData []string, err error) {
