@@ -3,12 +3,12 @@ package finger
 import (
 	_ "embed"
 	"encoding/json"
+	"github.com/dusbot/maxx/libs/common"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"github.com/dusbot/maxx/libs/common"
 
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 )
@@ -122,7 +122,7 @@ func (e *engine) Add(fingerprint Fingerprint) error {
 	if err != nil {
 		return err
 	}
-	fingerPath := filepath.Join(home, FileFolder, FingerName)
+	fingerPath := filepath.Join(home, common.FileFolder, FingerName)
 	data, err := json.MarshalIndent(e.fingerprints, "", "  ")
 	if err != nil {
 		return err
