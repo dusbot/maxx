@@ -8,8 +8,6 @@ require (
 	github.com/XinRoom/iprange v1.1.6
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/chromedp/cdproto v0.0.0-20250621212827-3f1355e655b9
-	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/dusbot/cpe2cve v0.0.0-20250625034158-4c1efc271212
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/emersion/go-imap/v2 v2.0.0-beta.2
 	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
@@ -30,6 +28,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/masterzen/winrm v0.0.0-20240702205601-3fad6e106085
+	github.com/microsoft/go-mssqldb v1.9.2
 	github.com/miekg/dns v1.1.66
 	github.com/minio/minio-go/v7 v7.0.94
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
@@ -262,7 +261,6 @@ require (
 	github.com/mholt/acmez v1.2.0 // indirect
 	github.com/mholt/archives v0.1.3 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
-	github.com/microsoft/go-mssqldb v1.9.2 // indirect
 	github.com/mikelolasagasti/xz v1.0.1 // indirect
 	github.com/minio/crc64nvme v1.0.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
