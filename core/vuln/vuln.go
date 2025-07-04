@@ -21,14 +21,14 @@ var (
 	TEMPLATES_URL          = "https://github.com/dusbot/templates"
 )
 
-type engine struct {
+type Engine struct {
 	TemplatePath       string
 	TemplateInnerPath  string
 	TemplateCustomPath string
 	Templates          []*templates.Template
 }
 
-func (e *engine) AddTemplate(fileName string, buf []byte) (err error) {
+func (e *Engine) AddTemplate(fileName string, buf []byte) (err error) {
 	err = os.WriteFile(filepath.Join(e.TemplateCustomPath, fileName), buf, 0644)
 	if err != nil {
 		return
@@ -37,12 +37,12 @@ func (e *engine) AddTemplate(fileName string, buf []byte) (err error) {
 	return
 }
 
-func NewEngine() (*engine, error) {
-	e := new(engine)
+func NewEngine() (*Engine, error) {
+	e := new(Engine)
 	return e, e.Init()
 }
 
-func (e *engine) Init() error {
+func (e *Engine) Init() error {
 	home, _ := os.UserHomeDir()
 	e.TemplatePath = filepath.Join(home, common.FileFolder, TEMPLATES_OUTER_FOLDER)
 	nuclei.DefaultConfig.TemplatesDirectory = e.TemplatePath
@@ -52,7 +52,7 @@ func (e *engine) Init() error {
 	return nil
 }
 
-func (e *engine) CheckTemplatesUpdate() (needUpdate bool) {
+func (e *Engine) CheckTemplatesUpdate() (needUpdate bool) {
 	var err error
 	needUpdate, _, _, err = utils.CheckUpdate(TEMPLATES_URL, e.TemplateInnerPath, false)
 	if err != nil {
@@ -61,7 +61,7 @@ func (e *engine) CheckTemplatesUpdate() (needUpdate bool) {
 	return
 }
 
-func (e *engine) UpdateTemplates() error {
+func (e *Engine) UpdateTemplates() error {
 	return utils.DownloadAndExtractLatestRelease(TEMPLATES_URL, e.TemplateInnerPath, false)
 }
 
@@ -73,7 +73,7 @@ type Target struct {
 	Proxies     []string
 }
 
-func (e *engine) Scan(t Target) (results []*output.ResultEvent) {
+func (e *Engine) Scan(t Target) (results []*output.ResultEvent) {
 	if len(t.Urls) == 0 || (len(t.Tags) == 0 && len(t.TemplateIDs) == 0) {
 		slog.Printf(slog.WARN, "Target is empty, urls:%+v, tags:%+v, templateIDs:%+v", t.Urls, t.Tags, t.TemplateIDs)
 		return
@@ -116,7 +116,7 @@ func (e *engine) Scan(t Target) (results []*output.ResultEvent) {
 	return
 }
 
-func (e *engine) ListTemplates() []*templates.Template {
+func (e *Engine) ListTemplates() []*templates.Template {
 	ne, err := nuclei.NewNucleiEngineCtx(context.Background(), nuclei.DisableUpdateCheck())
 	if err != nil {
 		slog.Printf(slog.WARN, "Nuclei new with error:%+v", err)
