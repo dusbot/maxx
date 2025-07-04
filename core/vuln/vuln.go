@@ -14,18 +14,22 @@ import (
 )
 
 var (
-	TEMPLATES_FOLDER = "templates"
-	NUCLEI_BINARY    = "nuclei"
-	TEMPLATES_URL    = "https://github.com/dusbot/templates"
+	TEMPLATES_OUTER_FOLDER = "templates"
+	TEMPLATE_INNER_FOLDER  = "inner"
+	TEMPLATE_CUSTOM_FOLDER = "custom"
+	NUCLEI_BINARY          = "nuclei"
+	TEMPLATES_URL          = "https://github.com/dusbot/templates"
 )
 
 type engine struct {
-	TemplatePath string
-	Templates    []*templates.Template
+	TemplatePath       string
+	TemplateInnerPath  string
+	TemplateCustomPath string
+	Templates          []*templates.Template
 }
 
 func (e *engine) AddTemplate(fileName string, buf []byte) (err error) {
-	err = os.WriteFile(filepath.Join(e.TemplatePath, fileName), buf, 0644)
+	err = os.WriteFile(filepath.Join(e.TemplateCustomPath, fileName), buf, 0644)
 	if err != nil {
 		return
 	}
@@ -40,13 +44,25 @@ func NewEngine() (*engine, error) {
 
 func (e *engine) Init() error {
 	home, _ := os.UserHomeDir()
-	e.TemplatePath = filepath.Join(home, common.FileFolder, TEMPLATES_FOLDER)
+	e.TemplatePath = filepath.Join(home, common.FileFolder, TEMPLATES_OUTER_FOLDER)
 	nuclei.DefaultConfig.TemplatesDirectory = e.TemplatePath
-	if err := utils.DownloadAndExtractLatestRelease(TEMPLATES_URL, e.TemplatePath, false); err != nil {
-		slog.Printf(slog.WARN, "Nuclet Templates update with error:%+v", err)
-		return err
-	}
+	e.TemplateInnerPath = filepath.Join(e.TemplatePath, TEMPLATE_INNER_FOLDER)
+	e.TemplateCustomPath = filepath.Join(e.TemplatePath, TEMPLATE_CUSTOM_FOLDER)
+	e.Templates = e.ListTemplates()
 	return nil
+}
+
+func (e *engine) CheckTemplatesUpdate() (needUpdate bool) {
+	var err error
+	needUpdate, _, _, err = utils.CheckUpdate(TEMPLATES_URL, e.TemplateInnerPath, false)
+	if err != nil {
+		slog.Printf(slog.WARN, "Check update with error:%+v", err)
+	}
+	return
+}
+
+func (e *engine) UpdateTemplates() error {
+	return utils.DownloadAndExtractLatestRelease(TEMPLATES_URL, e.TemplateInnerPath, false)
 }
 
 type Target struct {

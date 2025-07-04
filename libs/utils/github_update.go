@@ -13,12 +13,12 @@ import (
 )
 
 // 返回 (needDownload bool, err error)
-func CheckUpdate(repoURL, targetDir string, forceDownload bool) (bool, string, *GitHubRelease, error) {
+func CheckUpdate(repoURL, targetDir string, forceDownload bool) (needUpdate bool, repo string, release *GitHubRelease, err error) {
 	owner, repo, err := parseGitHubRepo(repoURL)
 	if err != nil {
 		return false, repo, nil, fmt.Errorf("invalid GitHub repo URL: %v", err)
 	}
-	release, err := fetchLatestRelease(owner, repo)
+	release, err = fetchLatestRelease(owner, repo)
 	if err != nil {
 		return false, repo, nil, fmt.Errorf("failed to fetch latest release: %v", err)
 	}
