@@ -325,7 +325,7 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 					service = "https"
 					resp.FingerPrint.Service = "https"
 					result.StatusCode, header_, resp.Raw, _ = uhttp.GET(uhttp.RequestInput{
-						RawUrl:             fmt.Sprintf("https://%s:%d", target, port),
+						RawUrl:             fmt.Sprintf("https://%s:%d/", target, port),
 						Timeout:            time.Duration(m.task.Timeout) * time.Second,
 						InsecureSkipVerify: true,
 					})
@@ -335,7 +335,7 @@ func (m *maxxScanner) handlePortScan(target string, port int) (result *portScanR
 					result.Title = uhttp.ExtractTitle(resp.Raw)
 					if result.StatusCode == 0 {
 						result.StatusCode, header_, resp.Raw, _ = uhttp.GET(uhttp.RequestInput{
-							RawUrl:             fmt.Sprintf("%s://%s:%d", resp.FingerPrint.Service, target, port),
+							RawUrl:             fmt.Sprintf("%s://%s:%d/", resp.FingerPrint.Service, target, port),
 							Timeout:            time.Duration(m.task.Timeout) * time.Second,
 							InsecureSkipVerify: true,
 						})
